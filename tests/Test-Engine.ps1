@@ -186,10 +186,84 @@ Assert ($plan.apps.Count -eq 4 -and @($plan.urls).Count -eq 1) "custom bundle gi
 Assert (@($plan.apps | Where-Object { $_.noAdmin }).name -contains 'Spotify') 'Spotify is installed without admin rights'
 $iso.OutputDir = 'C:\My Folder'
 Assert (@(Test-IsoSettings $iso) -match 'spaces').Count 'output path with spaces is rejected'
-foreach ($f in 'tools\install.ps1', 'setup\FirstLogon.ps1', 'setup\InstallApps.ps1', 'src\IsoBuildJob.ps1', 'src\IsoBuilder.ps1') {
+foreach ($f in 'tools\install.ps1', 'src\Settings.ps1', 'src\Gui.ps1', 'setup\FirstLogon.ps1', 'setup\InstallApps.ps1', 'src\IsoBuildJob.ps1', 'src\IsoBuilder.ps1') {
     $errs = $null
     [void][System.Management.Automation.Language.Parser]::ParseFile((Join-Path $script:Root $f), [ref]$null, [ref]$errs)
     Assert (-not $errs) "$f parses"
+}
+
+Write-Host 'Settings catalog'
+. (Join-Path $script:Root 'src\Settings.ps1')
+Import-SettingsCatalog
+$sids = @($script:SettingsCatalog | ForEach-Object { $_.id })
+Assert ($sids.Count -eq @($sids | Select-Object -Unique).Count) "setting ids are unique ($($sids.Count) settings)"
+foreach ($s in $script:SettingsCatalog) {
+    if ($s.category -notin $script:SettingsCategories) { Assert $false "$($s.id) has unknown category '$($s.category)'" }
+    $labels = @($s.options | ForEach-Object { $_.label })
+    if ($labels.Count -lt 2) { Assert $false "$($s.id) needs at least two options" }
+    if ($labels.Count -ne @($labels | Select-Object -Unique).Count) { Assert $false "$($s.id) has duplicate option labels" }
+    foreach ($a in (Get-Items $s 'after')) { if ($a -notin 'explorer', 'signout', 'reboot') { Assert $false "$($s.id) has unknown after '$a'" } }
+    foreach ($o in @($s.options)) {
+        $t = ConvertTo-OptionTweak $s $o
+        if (-not @(Get-Items $t 'registry').Count -and -not $t.PSObject.Properties['script']) { Assert $false "$($s.id) / $($o.label) changes nothing" }
+        foreach ($reg in (Get-Items $t 'registry')) {
+            try { $null = Split-RegPath $reg.path; $null = ConvertFrom-PortableValue $reg.value $reg.type } catch { Assert $false "$($s.id) / $($o.label): $($_.Exception.Message)" }
+        }
+        if ($t.PSObject.Properties['script']) {
+            if (-not $t.script.detect) { Assert $false "$($s.id) / $($o.label): a script option needs detect so the page can show it" }
+            foreach ($code in @($t.script.apply, $t.script.undo, $t.script.detect, $t.script.snapshot)) {
+                if ($code) {
+                    $errs = $null
+                    [void][System.Management.Automation.Language.Parser]::ParseInput((Join-Code $code), [ref]$null, [ref]$errs)
+                    if ($errs) { Assert $false "$($s.id) / $($o.label) script does not parse: $($errs[0].Message)" }
+                }
+            }
+        }
+    }
+}
+$checked = 0
+foreach ($s in $script:SettingsCatalog) { try { $null = Get-SettingCurrent $s; $checked++ } catch { Assert $false "$($s.id): reading its current value failed: $($_.Exception.Message)" } }
+Assert ($checked -eq $script:SettingsCatalog.Count) "current value of every setting can be read ($checked)"
+
+Write-Host 'Settings: change and undo'
+$setting = [pscustomobject]@{
+    id = 'test.choice'; name = 'Test choice'; category = 'Test'; description = ''
+    options = @(
+        [pscustomobject]@{ label = 'A'; registry = @([pscustomobject]@{ path = "$base\Setting"; name = 'Choice'; type = 'DWord'; value = 1 }) }
+        [pscustomobject]@{ label = 'B'; registry = @([pscustomobject]@{ path = "$base\Setting"; name = 'Choice'; type = 'DWord'; value = 2 }) }
+    )
+}
+Assert ($null -eq (Get-SettingCurrent $setting)) 'no option is current before any change'
+$ra = Set-SettingOption $setting $setting.options[0]
+Assert ((Get-SettingCurrent $setting).label -eq 'A') 'choosing A makes A current'
+$rb = Set-SettingOption $setting $setting.options[1]
+Assert ((Get-SettingCurrent $setting).label -eq 'B') 'choosing B makes B current'
+Assert ($rb.Entry.name -eq 'Test choice: B') 'History entry names the setting and option'
+[void](Undo-JournalEntry $rb.Entry.id)
+Assert ((Get-SettingCurrent $setting).label -eq 'A') 'undoing B goes back to A'
+[void](Undo-JournalEntry $ra.Entry.id)
+Assert (-not (Test-RegKey "$base\Setting")) 'undoing A removes what it created'
+
+Write-Host 'Network checks (no changes are made)'
+Assert ((ConvertTo-PrefixLength '255.255.255.0') -eq 24 -and (ConvertTo-PrefixLength '/16') -eq 16 -and (ConvertTo-PrefixLength '8') -eq 8) 'subnet masks and prefixes are understood'
+Assert ($null -eq (ConvertTo-PrefixLength '255.0.255.0') -and $null -eq (ConvertTo-PrefixLength '33') -and $null -eq (ConvertTo-PrefixLength 'abc')) 'bad subnet masks are rejected'
+Assert ((ConvertTo-SubnetMask 24) -eq '255.255.255.0' -and (ConvertTo-SubnetMask 32) -eq '255.255.255.255' -and (ConvertTo-SubnetMask 20) -eq '255.255.240.0') 'prefix to subnet mask'
+$net = [pscustomobject]@{ dhcp = $false; ip = '192.168.0.50'; prefix = 24; gateway = '192.168.0.1'; dnsStatic = $true; dns = @('1.1.1.1', '1.0.0.1') }
+Assert (@(Test-NetTarget $net).Count -eq 0) 'a normal static setup passes'
+Assert ((Format-NetConfig $net) -match 'Cloudflare') 'DNS presets are recognised'
+$bad = @(
+    @{ ip = '192.168.0.300' }, @{ ip = '192.168.0.0' }, @{ ip = '192.168.0.255' }, @{ gateway = '192.168.1.1' },
+    @{ gateway = '192.168.0.50' }, @{ prefix = 0 }, @{ dns = @() }, @{ dns = @('8.8.8') }, @{ ip = '127.0.0.5'; gateway = '127.0.0.1' }
+)
+foreach ($b in $bad) {
+    $c = $net.PSObject.Copy()
+    foreach ($k in $b.Keys) { $c.$k = $b[$k] }
+    Assert (@(Test-NetTarget $c).Count -gt 0) "rejected: $(($b.GetEnumerator() | ForEach-Object { "$($_.Key)=$(@($_.Value) -join ',')" }) -join ' ')"
+}
+Assert (@(Test-NetTarget ([pscustomobject]@{ dhcp = $true; dnsStatic = $false; dns = @() })).Count -eq 0) 'automatic IP and DNS always pass'
+foreach ($a in @(Get-NetAdapterList)) {
+    $cfg = Get-NetAdapterConfig $a
+    Assert ($cfg.guid -and $cfg.name) "reads adapter '$($cfg.name)': $(Format-NetConfig $cfg)"
 }
 
 # Clean up

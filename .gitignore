@@ -30,6 +30,7 @@ logs/
 *.job.json
 *-settings.json
 settings*.json
+!config/settings.json
 autounattend.xml
 unattend.xml
 

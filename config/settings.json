@@ -1,0 +1,1152 @@
+{
+  "_comment": "Settings page. Each setting lists its options; an option uses the same registry/script format as config/tweaks.json. The option whose values all match is shown as current. Changes are saved to History and can be undone.",
+  "categories": [
+    "Appearance",
+    "Taskbar",
+    "File Explorer",
+    "Mouse & keyboard",
+    "Power",
+    "Gaming",
+    "Security & remote access"
+  ],
+  "settings": [
+    {
+      "id": "appearance.apptheme",
+      "name": "App theme",
+      "category": "Appearance",
+      "description": "Light or dark colours for apps such as Settings and File Explorer.",
+      "options": [
+        {
+          "label": "Dark",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "AppsUseLightTheme",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "Light",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "AppsUseLightTheme",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "appearance.systemtheme",
+      "name": "Windows theme",
+      "category": "Appearance",
+      "description": "Light or dark colours for the taskbar, Start and notifications.",
+      "options": [
+        {
+          "label": "Dark",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "SystemUsesLightTheme",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "Light",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "SystemUsesLightTheme",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "appearance.transparency",
+      "name": "Transparency effects",
+      "category": "Appearance",
+      "description": "See-through backgrounds on Start, the taskbar and some windows.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "EnableTransparency",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "EnableTransparency",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "appearance.accent",
+      "name": "Accent colour on Start and taskbar",
+      "category": "Appearance",
+      "description": "Tints Start and the taskbar with your accent colour (needs the dark Windows theme).",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "ColorPrevalence",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+              "name": "ColorPrevalence",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "appearance.desktopicons",
+      "name": "Desktop icons",
+      "category": "Appearance",
+      "description": "Show or hide every icon on the desktop.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "HideIcons",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "HideIcons",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "after": [
+        "explorer"
+      ]
+    },
+    {
+      "id": "taskbar.alignment",
+      "name": "Taskbar alignment",
+      "category": "Taskbar",
+      "description": "Where the taskbar icons sit.",
+      "options": [
+        {
+          "label": "Centre",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "TaskbarAl",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Left",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "TaskbarAl",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "taskbar.searchmode",
+      "name": "Search on the taskbar",
+      "category": "Taskbar",
+      "description": "How the search button looks on the taskbar.",
+      "options": [
+        {
+          "label": "Hidden",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+              "name": "SearchboxTaskbarMode",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "Icon only",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+              "name": "SearchboxTaskbarMode",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Search box",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+              "name": "SearchboxTaskbarMode",
+              "type": "DWord",
+              "value": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "taskbar.taskview",
+      "name": "Task View button",
+      "category": "Taskbar",
+      "description": "The button that shows all open windows and desktops.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "ShowTaskViewButton",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "ShowTaskViewButton",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "taskbar.seconds",
+      "name": "Seconds in the clock",
+      "category": "Taskbar",
+      "description": "Shows seconds in the taskbar clock.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "ShowSecondsInSystemClock",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "ShowSecondsInSystemClock",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "taskbar.endtask",
+      "name": "\"End task\" on right-click",
+      "category": "Taskbar",
+      "description": "Close a frozen app from its taskbar button.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+              "name": "TaskbarEndTask",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+              "name": "TaskbarEndTask",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "explorer.extensions",
+      "name": "File extensions",
+      "category": "File Explorer",
+      "description": "Show .exe, .pdf and other endings on file names.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "HideFileExt",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "HideFileExt",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "explorer.hidden",
+      "name": "Hidden files",
+      "category": "File Explorer",
+      "description": "Show files and folders marked as hidden.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "Hidden",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "Hidden",
+              "type": "DWord",
+              "value": 2,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "explorer.launchto",
+      "name": "File Explorer opens to",
+      "category": "File Explorer",
+      "description": "The page a new File Explorer window starts on.",
+      "options": [
+        {
+          "label": "Home",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "LaunchTo",
+              "type": "DWord",
+              "value": 2,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "This PC",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "LaunchTo",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "explorer.compact",
+      "name": "Compact view",
+      "category": "File Explorer",
+      "description": "Less space between items in File Explorer.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "UseCompactMode",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+              "name": "UseCompactMode",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "input.mouseaccel",
+      "name": "Enhance pointer precision",
+      "category": "Mouse & keyboard",
+      "description": "Mouse acceleration. Most gamers turn it off so the pointer moves the same distance every time.",
+      "after": [
+        "signout"
+      ],
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Mouse",
+              "name": "MouseSpeed",
+              "type": "String",
+              "value": "1"
+            },
+            {
+              "path": "HKCU\\Control Panel\\Mouse",
+              "name": "MouseThreshold1",
+              "type": "String",
+              "value": "6"
+            },
+            {
+              "path": "HKCU\\Control Panel\\Mouse",
+              "name": "MouseThreshold2",
+              "type": "String",
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Mouse",
+              "name": "MouseSpeed",
+              "type": "String",
+              "value": "0"
+            },
+            {
+              "path": "HKCU\\Control Panel\\Mouse",
+              "name": "MouseThreshold1",
+              "type": "String",
+              "value": "0"
+            },
+            {
+              "path": "HKCU\\Control Panel\\Mouse",
+              "name": "MouseThreshold2",
+              "type": "String",
+              "value": "0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "input.numlock",
+      "name": "Num Lock at startup",
+      "category": "Mouse & keyboard",
+      "description": "Turn Num Lock on when you sign in.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Keyboard",
+              "name": "InitialKeyboardIndicators",
+              "type": "String",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Keyboard",
+              "name": "InitialKeyboardIndicators",
+              "type": "String",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "after": [
+        "signout"
+      ]
+    },
+    {
+      "id": "input.stickykeys",
+      "name": "Sticky Keys shortcut",
+      "category": "Mouse & keyboard",
+      "description": "Pressing Shift five times turns on Sticky Keys and shows a pop-up.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Accessibility\\StickyKeys",
+              "name": "Flags",
+              "type": "String",
+              "value": "510"
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Accessibility\\StickyKeys",
+              "name": "Flags",
+              "type": "String",
+              "value": "506"
+            }
+          ]
+        }
+      ],
+      "after": [
+        "signout"
+      ]
+    },
+    {
+      "id": "input.clipboard",
+      "name": "Clipboard history",
+      "category": "Mouse & keyboard",
+      "description": "Win + V shows the last things you copied.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Clipboard",
+              "name": "EnableClipboardHistory",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Clipboard",
+              "name": "EnableClipboardHistory",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "input.snap",
+      "name": "Snap windows",
+      "category": "Mouse & keyboard",
+      "description": "Drag a window to a screen edge to resize it.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Desktop",
+              "name": "WindowArrangementActive",
+              "type": "String",
+              "value": "1",
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Control Panel\\Desktop",
+              "name": "WindowArrangementActive",
+              "type": "String",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "after": [
+        "signout"
+      ]
+    },
+    {
+      "id": "power.plan",
+      "name": "Power plan",
+      "category": "Power",
+      "description": "Balanced suits most PCs. High performance keeps the CPU at full speed and uses more power.",
+      "options": [
+        {
+          "label": "Balanced",
+          "script": {
+            "describe": "Switch to the Balanced power plan",
+            "snapshot": "[regex]::Match([string](powercfg /getactivescheme), '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').Value",
+            "apply": [
+              "powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e",
+              "if ($LASTEXITCODE) { throw 'This PC does not have the Balanced plan.' }"
+            ],
+            "undo": "if ($Snapshot) { powercfg /setactive $Snapshot | Out-Null }",
+            "detect": "[string](powercfg /getactivescheme) -match '381b4222-f694-41f0-9685-ff5bb260df2e'"
+          }
+        },
+        {
+          "label": "High performance",
+          "script": {
+            "describe": "Switch to the High performance power plan",
+            "snapshot": "[regex]::Match([string](powercfg /getactivescheme), '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').Value",
+            "apply": [
+              "powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+              "if ($LASTEXITCODE) { throw 'This PC does not have the High performance plan.' }"
+            ],
+            "undo": "if ($Snapshot) { powercfg /setactive $Snapshot | Out-Null }",
+            "detect": "[string](powercfg /getactivescheme) -match '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'"
+          }
+        },
+        {
+          "label": "Power saver",
+          "script": {
+            "describe": "Switch to the Power saver power plan",
+            "snapshot": "[regex]::Match([string](powercfg /getactivescheme), '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}').Value",
+            "apply": [
+              "powercfg /setactive a1841308-3541-4fab-bc81-f71556f20b4a",
+              "if ($LASTEXITCODE) { throw 'This PC does not have the Power saver plan.' }"
+            ],
+            "undo": "if ($Snapshot) { powercfg /setactive $Snapshot | Out-Null }",
+            "detect": "[string](powercfg /getactivescheme) -match 'a1841308-3541-4fab-bc81-f71556f20b4a'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "power.screenoff",
+      "name": "Turn off the screen after",
+      "category": "Power",
+      "description": "When plugged in. Applies to the current power plan.",
+      "options": [
+        {
+          "label": "Never",
+          "script": {
+            "describe": "powercfg SUB_VIDEO VIDEOIDLE (plugged in) = 0 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 0",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 0"
+            ]
+          }
+        },
+        {
+          "label": "5 minutes",
+          "script": {
+            "describe": "powercfg SUB_VIDEO VIDEOIDLE (plugged in) = 300 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 300",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 300"
+            ]
+          }
+        },
+        {
+          "label": "10 minutes",
+          "script": {
+            "describe": "powercfg SUB_VIDEO VIDEOIDLE (plugged in) = 600 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 600",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 600"
+            ]
+          }
+        },
+        {
+          "label": "15 minutes",
+          "script": {
+            "describe": "powercfg SUB_VIDEO VIDEOIDLE (plugged in) = 900 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 900",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 900"
+            ]
+          }
+        },
+        {
+          "label": "30 minutes",
+          "script": {
+            "describe": "powercfg SUB_VIDEO VIDEOIDLE (plugged in) = 1800 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE 1800",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_VIDEO VIDEOIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_VIDEO VIDEOIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 1800"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "power.sleep",
+      "name": "Sleep after",
+      "category": "Power",
+      "description": "When plugged in. Applies to the current power plan.",
+      "options": [
+        {
+          "label": "Never",
+          "script": {
+            "describe": "powercfg SUB_SLEEP STANDBYIDLE (plugged in) = 0 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 0",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 0"
+            ]
+          }
+        },
+        {
+          "label": "15 minutes",
+          "script": {
+            "describe": "powercfg SUB_SLEEP STANDBYIDLE (plugged in) = 900 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 900",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 900"
+            ]
+          }
+        },
+        {
+          "label": "30 minutes",
+          "script": {
+            "describe": "powercfg SUB_SLEEP STANDBYIDLE (plugged in) = 1800 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 1800",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 1800"
+            ]
+          }
+        },
+        {
+          "label": "1 hour",
+          "script": {
+            "describe": "powercfg SUB_SLEEP STANDBYIDLE (plugged in) = 3600 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 3600",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 3600"
+            ]
+          }
+        },
+        {
+          "label": "2 hours",
+          "script": {
+            "describe": "powercfg SUB_SLEEP STANDBYIDLE (plugged in) = 7200 s",
+            "snapshot": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "if ($h.Count -ge 2) { [string][Convert]::ToUInt32($h[$h.Count - 2].Value, 16) }"
+            ],
+            "apply": [
+              "powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 7200",
+              "powercfg /setactive SCHEME_CURRENT"
+            ],
+            "undo": [
+              "if ($Snapshot) { powercfg /setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE $Snapshot; powercfg /setactive SCHEME_CURRENT }"
+            ],
+            "detect": [
+              "$h = [regex]::Matches([string](powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE), '0x[0-9a-fA-F]{8}')",
+              "$h.Count -ge 2 -and [Convert]::ToUInt32($h[$h.Count - 2].Value, 16) -eq 7200"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "power.faststartup",
+      "name": "Fast startup",
+      "category": "Power",
+      "description": "Shut down into a light hibernate so the PC starts faster. Off is better for dual-boot and for driver updates that need a clean start.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power",
+              "name": "HiberbootEnabled",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power",
+              "name": "HiberbootEnabled",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "power.hibernate",
+      "name": "Hibernation",
+      "category": "Power",
+      "description": "Off deletes hiberfil.sys, which frees several GB, and also turns off Fast startup.",
+      "options": [
+        {
+          "label": "On",
+          "script": {
+            "describe": "powercfg /hibernate on",
+            "snapshot": "[string](Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name HibernateEnabled -ErrorAction SilentlyContinue).HibernateEnabled",
+            "apply": "powercfg /hibernate on",
+            "undo": "if ($Snapshot -eq '0') { powercfg /hibernate off }",
+            "detect": "(Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name HibernateEnabled -ErrorAction SilentlyContinue).HibernateEnabled -eq 1"
+          }
+        },
+        {
+          "label": "Off",
+          "script": {
+            "describe": "powercfg /hibernate off",
+            "snapshot": "[string](Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name HibernateEnabled -ErrorAction SilentlyContinue).HibernateEnabled",
+            "apply": "powercfg /hibernate off",
+            "undo": "if ($Snapshot -eq '1') { powercfg /hibernate on }",
+            "detect": "(Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power' -Name HibernateEnabled -ErrorAction SilentlyContinue).HibernateEnabled -eq 0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gaming.gamemode",
+      "name": "Game Mode",
+      "category": "Gaming",
+      "description": "Windows gives the game you're playing priority and holds back updates while you play.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\GameBar",
+              "name": "AutoGameModeEnabled",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\GameBar",
+              "name": "AutoGameModeEnabled",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gaming.hags",
+      "name": "Hardware-accelerated GPU scheduling",
+      "category": "Gaming",
+      "description": "Lets the graphics card manage its own memory. Needed for DLSS frame generation. Takes effect after a restart.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers",
+              "name": "HwSchMode",
+              "type": "DWord",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers",
+              "name": "HwSchMode",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "after": [
+        "reboot"
+      ]
+    },
+    {
+      "id": "gaming.gamedvr",
+      "name": "Record games in the background",
+      "category": "Gaming",
+      "description": "Xbox Game Bar keeps the last few minutes of gameplay. Costs a little performance.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\System\\GameConfigStore",
+              "name": "GameDVR_Enabled",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\System\\GameConfigStore",
+              "name": "GameDVR_Enabled",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "security.uacdim",
+      "name": "Dim the screen for admin prompts",
+      "category": "Security & remote access",
+      "description": "The secure desktop stops other programs from clicking Yes for you. Turning it off keeps the prompt but skips the dimming.",
+      "options": [
+        {
+          "label": "On (recommended)",
+          "registry": [
+            {
+              "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+              "name": "PromptOnSecureDesktop",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+              "name": "PromptOnSecureDesktop",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "security.rdp",
+      "name": "Remote Desktop",
+      "category": "Security & remote access",
+      "description": "Lets other PCs connect to this one with Remote Desktop and opens it in the firewall. Windows Pro and up only.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server",
+              "name": "fDenyTSConnections",
+              "type": "DWord",
+              "value": 0
+            }
+          ],
+          "script": {
+            "describe": "Allow Remote Desktop through the firewall",
+            "snapshot": "[string]([bool](Get-NetFirewallRule -Group '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq 'True' }))",
+            "apply": "Enable-NetFirewallRule -Group '@FirewallAPI.dll,-28752'",
+            "undo": "if ($Snapshot -ne 'True') { Disable-NetFirewallRule -Group '@FirewallAPI.dll,-28752' }",
+            "detect": "[string]([bool](Get-NetFirewallRule -Group '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq 'True' })) -eq 'True'"
+          }
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server",
+              "name": "fDenyTSConnections",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ],
+          "script": {
+            "describe": "Close Remote Desktop in the firewall",
+            "snapshot": "[string]([bool](Get-NetFirewallRule -Group '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq 'True' }))",
+            "apply": "Disable-NetFirewallRule -Group '@FirewallAPI.dll,-28752'",
+            "undo": "if ($Snapshot -eq 'True') { Enable-NetFirewallRule -Group '@FirewallAPI.dll,-28752' }",
+            "detect": "[string]([bool](Get-NetFirewallRule -Group '@FirewallAPI.dll,-28752' -ErrorAction SilentlyContinue | Where-Object { $_.Enabled -eq 'True' })) -eq 'False'"
+          }
+        }
+      ]
+    }
+  ]
+}

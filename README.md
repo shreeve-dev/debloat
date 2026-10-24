@@ -69,6 +69,7 @@ Your bundles show up next to the built-in ones, work with `-Bundle "<name>"`, an
 | **Review first** | Nothing runs until you've seen the full list of registry, service and task changes, with before and after values. |
 | **Risk labels** | Each tweak is marked Safe, Moderate or Advanced, with a plain-English warning where it matters. |
 | **Presets** | Recommended, Gaming, Privacy, Clean desktop, Everything. A preset only ticks boxes. |
+| **Settings** | Common Windows settings as simple choices that show what's set now: theme, taskbar, File Explorer, mouse, power plan and sleep, Game Mode, GPU scheduling, Remote Desktop and more. Network adapters can be switched between automatic and static IP, with DNS presets (Cloudflare, Google, Quad9) or your own servers. Network changes revert by themselves after 30 seconds unless you keep them. Everything goes into History. |
 | **Install apps** | 90+ apps through winget, grouped by category, with Installed / Update available badges. Built-in bundles plus your own (see *Your own bundles*). Installs run in their own window as your normal user. Apps winget doesn't carry (NVIDIA App) open their official download page. |
 | **ISO Builder** | Turns an official Windows 11 ISO into a self-setting-up installer: one edition, bloat apps removed, this PC's drivers added, no setup screens (local account), and on first sign-in your preset is applied and your bundles are installed. Choosing the disk to install to is always left to you. Needs the Windows ADK Deployment Tools (one-click install) and about 35 GB of temporary space. |
 | **Startup manager** | Turns startup programs off the same way Task Manager does. Nothing is deleted. |
@@ -84,10 +85,12 @@ Run.bat              double-click launcher
 config/tweaks.json   the tweak catalog and maintenance actions
 config/presets.json  presets
 config/apps.json     known Store apps, groups and the protected list
+config/settings.json the Settings page (each option uses the tweak format)
 src/Engine.ps1       registry/service/task engine, status, plans, undo journal
 src/Apps.ps1         Store app removal and startup programs
 src/Gui.ps1          WPF interface
 ui/MainWindow.xaml   window layout and styles
+src/Settings.ps1     Settings page logic and network adapter changes
 src/Installer.ps1    winget installs, updates, uninstalls, bundles
 src/IsoBuilder.ps1   custom ISO build (DISM, drivers, autounattend.xml, oscdimg)
 src/IsoBuildJob.ps1  runs a build in its own window
