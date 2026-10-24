@@ -205,7 +205,7 @@ foreach ($s in $script:SettingsCatalog) {
     foreach ($a in (Get-Items $s 'after')) { if ($a -notin 'explorer', 'signout', 'reboot') { Assert $false "$($s.id) has unknown after '$a'" } }
     foreach ($o in @($s.options)) {
         $t = ConvertTo-OptionTweak $s $o
-        if (-not (Get-Items $t 'registry').Count -and -not $t.PSObject.Properties['script']) { Assert $false "$($s.id) / $($o.label) changes nothing" }
+        if (-not @(Get-Items $t 'registry').Count -and -not $t.PSObject.Properties['script']) { Assert $false "$($s.id) / $($o.label) changes nothing" }
         foreach ($reg in (Get-Items $t 'registry')) {
             try { $null = Split-RegPath $reg.path; $null = ConvertFrom-PortableValue $reg.value $reg.type } catch { Assert $false "$($s.id) / $($o.label): $($_.Exception.Message)" }
         }

@@ -112,7 +112,7 @@ function Get-DnsPresetName([string[]]$Servers) {
 }
 
 function Format-NetConfig($Config) {
-    $ip = if ($Config.dhcp) { 'IP automatic (DHCP)' } else {
+    $ip = if ($Config.dhcp) { 'IP automatic (DHCP)' } elseif (-not $Config.ip) { 'IP static, no address set' } else {
         $s = "IP $($Config.ip)/$($Config.prefix)"
         if ($Config.gateway) { $s += ", gateway $($Config.gateway)" } else { $s += ', no gateway' }
         $s
