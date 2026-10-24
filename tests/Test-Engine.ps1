@@ -266,6 +266,18 @@ foreach ($a in @(Get-NetAdapterList)) {
     Assert ($cfg.guid -and $cfg.name) "reads adapter '$($cfg.name)': $(Format-NetConfig $cfg)"
 }
 
+Write-Host 'PC name and domain checks (no changes are made)'
+Assert (@(Test-ComputerNameText 'GAMING-PC').Count -eq 0 -and @(Test-ComputerNameText 'pc2').Count -eq 0) 'normal PC names pass'
+foreach ($bad in '', 'THIS-NAME-IS-TOO-LONG', 'has space', 'under_score', '12345', '-lead', 'trail-', 'dot.name') {
+    Assert (@(Test-ComputerNameText $bad).Count -gt 0) "PC name rejected: '$bad'"
+}
+Assert (@(Test-WorkgroupText 'WORKGROUP').Count -eq 0 -and @(Test-WorkgroupText 'HOME-LAB').Count -eq 0) 'normal workgroup names pass'
+foreach ($bad in '', 'A-VERY-LONG-WORKGROUP', 'bad/name', 'a.b') { Assert (@(Test-WorkgroupText $bad).Count -gt 0) "workgroup rejected: '$bad'" }
+Assert (@(Test-DomainText 'corp.example.com').Count -eq 0 -and @(Test-DomainText 'AD').Count -eq 0) 'normal domain names pass'
+foreach ($bad in '', 'bad domain', '-x.com', 'a..b', 'x_y.com') { Assert (@(Test-DomainText $bad).Count -gt 0) "domain rejected: '$bad'" }
+$pcid = Get-ComputerIdentity
+Assert ($pcid.Name -and ($pcid.Workgroup -or $pcid.Domain)) "reads this PC: $($pcid.Name), $(if ($pcid.InDomain) { "domain $($pcid.Domain)" } else { "workgroup $($pcid.Workgroup)" })"
+
 # Clean up
 $hk = Open-RegKey 'HKCU\Software' -Writable
 $hk.DeleteSubKeyTree('DebloatToolTest', $false); $hk.Close()
