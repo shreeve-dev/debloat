@@ -38,6 +38,29 @@
       <Setter Property="BorderBrush" Value="#5A2C35"/>
       <Setter Property="Foreground" Value="#FFB3BA"/>
     </Style>
+    <Style x:Key="Pill" TargetType="RadioButton">
+      <Setter Property="Foreground" Value="#C9CEDA"/>
+      <Setter Property="Margin" Value="0,0,6,6"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="b" CornerRadius="14" Padding="12,5" Background="#22262F" BorderBrush="#394050" BorderThickness="1">
+              <ContentPresenter/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="BorderBrush" Value="#5A6478"/></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="b" Property="Background" Value="#3D7BFA"/>
+                <Setter TargetName="b" Property="BorderBrush" Value="#3D7BFA"/>
+                <Setter Property="Foreground" Value="White"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="b" Property="Opacity" Value="0.45"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
     <Style x:Key="Nav" TargetType="RadioButton">
       <Setter Property="Foreground" Value="#C9CEDA"/>
       <Setter Property="FontSize" Value="14"/>
@@ -101,6 +124,7 @@
         <StackPanel>
           <RadioButton x:Name="NavDashboard" Style="{StaticResource Nav}" Content="Dashboard" IsChecked="True"/>
           <RadioButton x:Name="NavTweaks" Style="{StaticResource Nav}" Content="Tweaks"/>
+          <RadioButton x:Name="NavSettings" Style="{StaticResource Nav}" Content="Settings"/>
           <RadioButton x:Name="NavInstall" Style="{StaticResource Nav}" Content="Install apps"/>
           <RadioButton x:Name="NavApps" Style="{StaticResource Nav}" Content="Remove apps"/>
           <RadioButton x:Name="NavStartup" Style="{StaticResource Nav}" Content="Startup"/>
@@ -145,6 +169,22 @@
         </StackPanel>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel x:Name="TweakList" Margin="0,0,12,18"/>
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- Settings -->
+      <DockPanel x:Name="PanelSettings" Grid.Row="0" Visibility="Collapsed" Margin="30,26,18,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,12,0">
+          <TextBlock Text="Settings" Style="{StaticResource H1}"/>
+          <TextBlock Text="Common Windows settings in one place. Click an option to change it right away. Every change is saved to History, so you can undo it." Style="{StaticResource Sub}"/>
+          <DockPanel Margin="0,0,0,10">
+            <Button x:Name="SettingsRefresh" DockPanel.Dock="Right" Content="Refresh" Margin="10,0,0,0"/>
+            <TextBlock DockPanel.Dock="Left" Text="Search" VerticalAlignment="Center" Foreground="#8A91A3" Margin="0,0,10,0"/>
+            <TextBox x:Name="SettingsSearch"/>
+          </DockPanel>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="SettingsList" Margin="0,0,12,18"/>
         </ScrollViewer>
       </DockPanel>
 

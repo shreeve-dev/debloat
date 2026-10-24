@@ -35,7 +35,6 @@
     { "id": "SlackTechnologies.Slack", "name": "Slack", "category": "Communication", "description": "Team chat." },
     { "id": "Zoom.Zoom", "name": "Zoom", "category": "Communication", "description": "Video meetings." },
     { "id": "Microsoft.Teams", "name": "Microsoft Teams", "category": "Communication", "description": "Work and school chat and meetings." },
-    { "id": "Telegram.TelegramDesktop", "name": "Telegram", "category": "Communication", "description": "Cloud messaging." },
     { "id": "OpenWhisperSystems.Signal", "name": "Signal", "category": "Communication", "description": "End-to-end encrypted messaging." },
 
     { "id": "Valve.Steam", "name": "Steam", "category": "Gaming", "description": "Valve's game store and launcher." },
@@ -93,9 +92,13 @@
     { "id": "Rufus.Rufus", "name": "Rufus", "category": "Utilities", "description": "Make bootable USB drives (Windows installs, Linux)." },
     { "id": "qBittorrent.qBittorrent", "name": "qBittorrent", "category": "Utilities", "description": "Ad-free torrent client." },
 
+    { "id": "Microsoft.Sysinternals.Suite", "name": "Sysinternals Suite", "category": "Windows Power Tools", "description": "All 70+ Sysinternals tools in one package (Process Explorer, Autoruns, PsTools and the rest)." },
     { "id": "Microsoft.Sysinternals.ProcessExplorer", "name": "Process Explorer", "category": "Windows Power Tools", "description": "Task Manager on steroids: see exactly what every process is doing." },
     { "id": "Microsoft.Sysinternals.Autoruns", "name": "Autoruns", "category": "Windows Power Tools", "description": "Every program, service and task that starts with Windows, in one place." },
-    { "id": "Microsoft.Sysinternals.ProcessMonitor", "name": "Process Monitor", "category": "Windows Power Tools", "description": "Live file, registry and network activity (the tool you captured earlier)." },
+    { "id": "Microsoft.Sysinternals.ProcessMonitor", "name": "Process Monitor", "category": "Windows Power Tools", "description": "Live file, registry and network activity of every process." },
+    { "id": "Microsoft.Sysinternals.TCPView", "name": "TCPView", "category": "Windows Power Tools", "description": "Every open network connection and which program owns it." },
+    { "id": "Microsoft.Sysinternals.ZoomIt", "name": "ZoomIt", "category": "Windows Power Tools", "description": "Zoom and draw on the screen, great for demos and screen shares." },
+    { "id": "Microsoft.Sysinternals.BGInfo", "name": "BGInfo", "category": "Windows Power Tools", "description": "Shows the PC name, IP and specs on the desktop wallpaper." },
     { "id": "Flow-Launcher.Flow-Launcher", "name": "Flow Launcher", "category": "Windows Power Tools", "description": "Fast keyboard launcher for apps, files and web search." },
     { "id": "Nilesoft.Shell", "name": "Nilesoft Shell", "category": "Windows Power Tools", "description": "Fully customisable right-click menu." },
     { "id": "StartIsBack.StartAllBack", "name": "StartAllBack", "category": "Windows Power Tools", "description": "Windows 10-style Start menu and taskbar on Windows 11. Paid after the trial." },

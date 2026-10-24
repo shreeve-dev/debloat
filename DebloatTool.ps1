@@ -35,6 +35,7 @@ $script:Root = $PSScriptRoot
 . (Join-Path $script:Root 'src\Apps.ps1')
 . (Join-Path $script:Root 'src\Installer.ps1')
 . (Join-Path $script:Root 'src\IsoBuilder.ps1')
+. (Join-Path $script:Root 'src\Settings.ps1')
 
 $script:IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -67,6 +68,7 @@ if ($needsAdmin -and -not $script:IsAdmin -and -not $NoElevate) {
 
 Import-DebloatConfig
 Import-InstallCatalog
+Import-SettingsCatalog
 $Tweak =@($Tweak | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
 if (-not $cli) {

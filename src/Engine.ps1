@@ -469,6 +469,7 @@ function Undo-Change($Change) {
         'task'    { Set-TaskState $Change $Change.prior }
         'script'  { if ($Change.undo) { Invoke-TweakScript $Change.undo $Change.snapshot | Out-Null } }
         'appx'    { Restore-App $Change }
+        'netadapter' { Set-NetAdapterConfig $Change.prior }
         default   { throw "Unknown change kind '$($Change.kind)'" }
     }
 }

@@ -79,7 +79,7 @@ function Show-Message([string]$Text, [string]$Buttons = 'OK', [string]$Icon = 'I
 #endregion
 #region Navigation and log ---------------------------------------------------
 
-$script:Panels = 'Dashboard', 'Tweaks', 'Install', 'Apps', 'Startup', 'Maintenance', 'Iso', 'History'
+$script:Panels = 'Dashboard', 'Tweaks', 'Settings', 'Install', 'Apps', 'Startup', 'Maintenance', 'Iso', 'History'
 
 function Show-Panel([string]$Name) {
     foreach ($p in $script:Panels) {
@@ -89,6 +89,8 @@ function Show-Panel([string]$Name) {
     $script:UI.ActionBar.Visibility = $(if ($Name -in 'Dashboard', 'Tweaks', 'Apps') { 'Visible' } else { 'Collapsed' })
     # The install list asks winget what is installed, which takes a few seconds, so load it on first visit.
     if ($Name -eq 'Install' -and -not $script:InstallLoaded) { Update-UI; Build-InstallList }
+    # The Settings page checks every setting's current value, so it is also built on first visit.
+    if ($Name -eq 'Settings' -and -not $script:SettingsLoaded) { Update-UI; Build-SettingsList }
     if ($Name -eq 'Iso' -and -not $script:IsoEditionsFor -and $script:IsAdmin -and $script:UI.IsoPath.Text) { Update-UI; Read-IsoEditions }
 }
 
@@ -659,6 +661,316 @@ function Switch-StartupItem($Item) {
 }
 
 #endregion
+#region Settings page --------------------------------------------------------
+
+function New-Pill([string]$Text, [string]$Group, [bool]$Checked, $Tag) {
+    $r = New-Object System.Windows.Controls.RadioButton
+    $r.Content = $Text; $r.GroupName = $Group; $r.IsChecked = $Checked; $r.Tag = $Tag
+    $r.Style = $script:Window.FindResource('Pill')
+    $r
+}
+
+function New-Field([string]$Label, [string]$Value, [double]$Width = 150) {
+    $s = New-Object System.Windows.Controls.StackPanel
+    $s.Margin = '0,0,10,6'
+    [void]$s.Children.Add((New-Text $Label 11.5 '#8A91A3' 'Normal' '0,0,0,3'))
+    $tb = New-Object System.Windows.Controls.TextBox
+    $tb.Text = $Value; $tb.Width = $Width
+    [void]$s.Children.Add($tb)
+    @($s, $tb)
+}
+
+function Build-SettingsList {
+    $list = $script:UI.SettingsList
+    $list.Children.Clear()
+    $script:SettingCards = @{}; $script:SettingHeaders = @{}
+    Set-Busy $true
+    try {
+        $h = New-Header 'Network'
+        $script:NetPanel = New-Object System.Windows.Controls.StackPanel
+        [void]$list.Children.Add($h)
+        [void]$list.Children.Add($script:NetPanel)
+        $script:SettingHeaders['Network'] = @($h, $script:NetPanel)
+        Build-NetworkSection
+
+        foreach ($cat in $script:SettingsCategories) {
+            $items = @($script:SettingsCatalog | Where-Object { $_.category -eq $cat })
+            if (-not $items.Count) { continue }
+            $h = New-Header $cat
+            $panel = New-Object System.Windows.Controls.StackPanel
+            foreach ($s in $items) { [void]$panel.Children.Add((New-SettingCard $s)) }
+            [void]$list.Children.Add($h)
+            [void]$list.Children.Add($panel)
+            $script:SettingHeaders[$cat] = @($h, $panel)
+        }
+    } finally { Set-Busy $false }
+    $script:SettingsLoaded = $true
+    Update-SettingsFilter
+}
+
+function New-SettingCard($Setting) {
+    $stack = New-Object System.Windows.Controls.StackPanel
+    [void]$stack.Children.Add((New-Text $Setting.name 14 '#F2F4F8' 'SemiBold'))
+    [void]$stack.Children.Add((New-Text $Setting.description 12.5 '#9AA1B2' 'Normal' '0,3,0,8'))
+    $pills = New-Object System.Windows.Controls.WrapPanel
+    $refs = @{}
+    foreach ($o in @($Setting.options)) {
+        $p = New-Pill $o.label "set-$($Setting.id)" $false ([pscustomobject]@{ Setting = $Setting; Option = $o })
+        $p.Add_Click({ param($s, $e) Invoke-SettingClick $s.Tag.Setting $s.Tag.Option })
+        $refs[$o.label] = $p
+        [void]$pills.Children.Add($p)
+    }
+    [void]$stack.Children.Add($pills)
+    $note = New-Text '' 11.5 '#6F7790' 'Normal' '0,2,0,0'
+    [void]$stack.Children.Add($note)
+    $card = New-Card $stack
+    $script:SettingCards[$Setting.id] = [pscustomobject]@{ Card = $card; Setting = $Setting; Pills = $refs; Note = $note; Current = $null }
+    Update-SettingCard $Setting
+    $card
+}
+
+function Update-SettingCard($Setting) {
+    $c = $script:SettingCards[$Setting.id]
+    $cur = $null
+    try { $cur = Get-SettingCurrent $Setting } catch { }
+    $c.Current = $(if ($cur) { $cur.label } else { $null })
+    foreach ($k in @($c.Pills.Keys)) { $c.Pills[$k].IsChecked = ($k -eq $c.Current) }
+    $after = @(Get-Items $Setting 'after' | ForEach-Object { $script:AfterText[$_] })
+    $parts = @()
+    if (-not $c.Current) { $parts += 'Set to something else right now.' }
+    if ($after) { $parts += "Takes effect after $($after -join ' / ')." }
+    $c.Note.Text = $parts -join ' '
+    $c.Note.Visibility = $(if ($parts) { 'Visible' } else { 'Collapsed' })
+}
+
+function Invoke-SettingClick($Setting, $Option) {
+    $c = $script:SettingCards[$Setting.id]
+    if ($c.Current -eq $Option.label) { return }
+    if (-not $script:IsAdmin) {
+        [void](Show-Message 'Changing settings needs administrator rights. Close DebloatTool and open it again with Run.bat.')
+        Update-SettingCard $Setting
+        return
+    }
+    Write-Log "Setting: $($Setting.name) -> $($Option.label)"
+    Set-Busy $true
+    try {
+        $r = Set-SettingOption $Setting $Option
+        foreach ($e in $r.Errors) { Write-Log "  ! $e" }
+        if (-not $r.Errors.Count) { Write-Log '  done (saved to History)' }
+    } catch { Write-Log "  ! $($_.Exception.Message)" }
+    finally { Set-Busy $false }
+    Update-SettingCard $Setting
+    $after = @(Get-Items $Setting 'after')
+    if ($after -contains 'explorer') {
+        if ((Show-Message 'This change needs File Explorer and the taskbar to restart. Restart them now? Open Explorer windows will close.' 'YesNo' 'Question') -eq 'Yes') {
+            Restart-Explorer; Write-Log 'File Explorer restarted.'
+        }
+    }
+}
+
+function Update-SettingsFilter {
+    if (-not $script:SettingsLoaded) { return }
+    $q = $script:UI.SettingsSearch.Text.Trim()
+    $visible = @{}
+    foreach ($c in $script:SettingCards.Values) {
+        $hay = "$($c.Setting.name) $($c.Setting.description) $($c.Setting.category) $(@($c.Setting.options | ForEach-Object { $_.label }) -join ' ')"
+        $show = (-not $q) -or $hay.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0
+        $c.Card.Visibility = $(if ($show) { 'Visible' } else { 'Collapsed' })
+        if ($show) { $visible[$c.Setting.category] = $true }
+    }
+    $netWords = 'Network IP address DNS gateway subnet static DHCP Ethernet Wi-Fi adapter'
+    $visible['Network'] = (-not $q) -or $netWords.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    foreach ($k in @($script:SettingHeaders.Keys)) {
+        $v = $(if ($visible[$k]) { 'Visible' } else { 'Collapsed' })
+        foreach ($el in $script:SettingHeaders[$k]) { $el.Visibility = $v }
+    }
+}
+
+function Build-NetworkSection {
+    $panel = $script:NetPanel
+    $panel.Children.Clear()
+    $script:NetControls = @()
+    $adapters = @(Get-NetAdapterList)
+    if (-not $adapters.Count) { [void]$panel.Children.Add((New-Text 'No network adapters found.' 13 '#8A91A3')); return }
+    foreach ($a in $adapters) {
+        try { [void]$panel.Children.Add((New-NetAdapterCard $a)) }
+        catch { [void]$panel.Children.Add((New-Card (New-Text "$($a.Name): could not read its settings ($($_.Exception.Message))" 12.5 '#FF7A85'))) }
+    }
+}
+
+function New-NetAdapterCard($Adapter) {
+    $cfg = Get-NetAdapterConfig $Adapter
+    $g = "net-$($cfg.guid)"
+    $ctl = @{ Config = $cfg }
+    $stack = New-Object System.Windows.Controls.StackPanel
+
+    $title = New-Object System.Windows.Controls.WrapPanel
+    $name = New-Text $cfg.name 14 '#F2F4F8' 'SemiBold'
+    [void]$title.Children.Add($name)
+    $up = $cfg.status -eq 'Up'
+    [void]$title.Children.Add($(if ($up) { New-Badge 'Connected' '#1D3A2A' '#62D394' } else { New-Badge $cfg.status '#23272F' '#8A91A3' }))
+    [void]$stack.Children.Add($title)
+    [void]$stack.Children.Add((New-Text $cfg.description 12 '#8A91A3' 'Normal' '0,2,0,0'))
+    $now = Format-NetConfig $cfg
+    if ($cfg.dhcp -and $cfg.ip) { $now += "  (got $($cfg.ip)/$($cfg.prefix)$(if ($cfg.gateway) { ", gateway $($cfg.gateway)" }))" }
+    if (-not $cfg.dnsStatic -and @($cfg.dns).Count) { $now += "  (DNS in use: $(@($cfg.dns) -join ', '))" }
+    [void]$stack.Children.Add((New-Text "Now: $now" 12.5 '#9AA1B2' 'Normal' '0,4,0,10'))
+
+    # IP address
+    [void]$stack.Children.Add((New-Text 'IP address' 12.5 '#C9CEDA' 'SemiBold' '0,0,0,4'))
+    $ipPills = New-Object System.Windows.Controls.WrapPanel
+    $ctl.IpAuto = New-Pill 'Automatic (DHCP)' "$g-ip" $cfg.dhcp $null
+    $ctl.IpStatic = New-Pill 'Static' "$g-ip" (-not $cfg.dhcp) $null
+    [void]$ipPills.Children.Add($ctl.IpAuto); [void]$ipPills.Children.Add($ctl.IpStatic)
+    [void]$stack.Children.Add($ipPills)
+    $ipFields = New-Object System.Windows.Controls.WrapPanel
+    $ipFields.Margin = '0,2,0,6'
+    $f1 = New-Field 'IP address' $cfg.ip; $ctl.Ip = $f1[1]
+    $mask = $(if ($cfg.prefix) { ConvertTo-SubnetMask $cfg.prefix } else { '255.255.255.0' })
+    $f2 = New-Field 'Subnet mask' $mask; $ctl.Mask = $f2[1]
+    $f3 = New-Field 'Gateway (router)' $cfg.gateway; $ctl.Gw = $f3[1]
+    foreach ($f in $f1, $f2, $f3) { [void]$ipFields.Children.Add($f[0]) }
+    $ctl.IpFields = $ipFields
+    [void]$stack.Children.Add($ipFields)
+
+    # DNS
+    [void]$stack.Children.Add((New-Text 'DNS servers' 12.5 '#C9CEDA' 'SemiBold' '0,4,0,4'))
+    $preset = $(if ($cfg.dnsStatic) { Get-DnsPresetName @($cfg.dns) } else { $null })
+    $dnsPills = New-Object System.Windows.Controls.WrapPanel
+    $ctl.DnsAuto = New-Pill 'Automatic' "$g-dns" (-not $cfg.dnsStatic) $null
+    [void]$dnsPills.Children.Add($ctl.DnsAuto)
+    $ctl.DnsPresets = @{}
+    foreach ($k in $script:DnsPresets.Keys) {
+        $p = New-Pill "$k ($($script:DnsPresets[$k][0]))" "$g-dns" ($preset -eq $k) $k
+        $ctl.DnsPresets[$k] = $p
+        [void]$dnsPills.Children.Add($p)
+    }
+    $ctl.DnsCustom = New-Pill 'Custom' "$g-dns" ($cfg.dnsStatic -and -not $preset) $null
+    [void]$dnsPills.Children.Add($ctl.DnsCustom)
+    [void]$stack.Children.Add($dnsPills)
+    $dnsFields = New-Object System.Windows.Controls.WrapPanel
+    $dnsFields.Margin = '0,2,0,6'
+    $cur = @($cfg.dns)
+    $d1 = New-Field 'Preferred DNS' $(if ($cfg.dnsStatic -and $cur.Count -ge 1) { $cur[0] } else { '' }); $ctl.Dns1 = $d1[1]
+    $d2 = New-Field 'Alternate DNS' $(if ($cfg.dnsStatic -and $cur.Count -ge 2) { $cur[1] } else { '' }); $ctl.Dns2 = $d2[1]
+    [void]$dnsFields.Children.Add($d1[0]); [void]$dnsFields.Children.Add($d2[0])
+    $ctl.DnsFields = $dnsFields
+    [void]$stack.Children.Add($dnsFields)
+
+    $bar = New-Object System.Windows.Controls.WrapPanel
+    $bar.Margin = '0,6,0,0'
+    $apply = New-Button 'Apply' $ctl 'AccentBtn'
+    $apply.Add_Click({ param($s, $e) Invoke-NetApply $s.Tag })
+    [void]$bar.Children.Add($apply)
+    [void]$bar.Children.Add((New-Text 'You get 30 seconds to keep the change, otherwise it is undone.' 11.5 '#6F7790' 'Normal' '6,8,0,0'))
+    [void]$stack.Children.Add($bar)
+
+    foreach ($p in @($ctl.IpAuto, $ctl.IpStatic, $ctl.DnsAuto, $ctl.DnsCustom) + @($ctl.DnsPresets.Values)) {
+        $p.Add_Click({ Update-NetFieldState })
+    }
+    $script:NetControls = @($script:NetControls | Where-Object { $_.Config.guid -ne $cfg.guid }) + $ctl
+    Update-NetFieldState
+    New-Card $stack
+}
+
+function Update-NetFieldState {
+    foreach ($ctl in @($script:NetControls)) {
+        if (-not $ctl) { continue }
+        $ctl.IpFields.IsEnabled = [bool]$ctl.IpStatic.IsChecked
+        $ctl.DnsFields.IsEnabled = [bool]$ctl.DnsCustom.IsChecked
+        $ctl.IpFields.Opacity = $(if ($ctl.IpFields.IsEnabled) { 1 } else { 0.45 })
+        $ctl.DnsFields.Opacity = $(if ($ctl.DnsFields.IsEnabled) { 1 } else { 0.45 })
+    }
+}
+
+function Get-NetTargetFromUi($Ctl) {
+    $cfg = $Ctl.Config
+    $dhcp = [bool]$Ctl.IpAuto.IsChecked
+    $dns = @()
+    $dnsStatic = -not $Ctl.DnsAuto.IsChecked
+    if ($Ctl.DnsCustom.IsChecked) { $dns = @($Ctl.Dns1.Text.Trim(), $Ctl.Dns2.Text.Trim() | Where-Object { $_ }) }
+    else { foreach ($k in @($Ctl.DnsPresets.Keys)) { if ($Ctl.DnsPresets[$k].IsChecked) { $dns = @($script:DnsPresets[$k]) } } }
+    [pscustomobject]@{
+        guid = $cfg.guid; name = $cfg.name; description = $cfg.description; status = $cfg.status
+        dhcp = $dhcp
+        ip = $(if ($dhcp) { '' } else { $Ctl.Ip.Text.Trim() })
+        prefix = $(if ($dhcp) { $null } else { ConvertTo-PrefixLength $Ctl.Mask.Text })
+        gateway = $(if ($dhcp) { '' } else { $Ctl.Gw.Text.Trim() })
+        dnsStatic = $dnsStatic
+        dns = @($dns)
+    }
+}
+
+function Invoke-NetApply($Ctl) {
+    if (-not $script:IsAdmin) { [void](Show-Message 'Changing network settings needs administrator rights.'); return }
+    $target = Get-NetTargetFromUi $Ctl
+    $errs = @(Test-NetTarget $target)
+    if ($errs.Count) { [void](Show-Message ($errs -join "`n") 'OK' 'Warning'); return }
+    $from = Format-NetConfig $Ctl.Config
+    $to = Format-NetConfig $target
+    if ($from -eq $to) { Write-Log "$($target.name): nothing to change."; return }
+    $msg = "Change $($target.name)?`n`nNow:  $from`nNew:  $to`n`nThe connection can drop for a few seconds. After the change you have 30 seconds to keep it; otherwise it is undone automatically."
+    if ((Show-Message $msg 'YesNo' 'Question') -ne 'Yes') { return }
+    Write-Log "Network: $($target.name) -> $to"
+    $entry = $null
+    Set-Busy $true
+    try { $entry = Invoke-NetAdapterChange $target; Write-Log '  done (saved to History)' }
+    catch { Write-Log "  ! $($_.Exception.Message)"; [void](Show-Message $_.Exception.Message 'OK' 'Warning') }
+    finally { Set-Busy $false }
+    if ($entry) {
+        if (Show-KeepDialog 30 "Keep the new settings for $($target.name)?") { Write-Log '  kept' }
+        else {
+            Write-Log '  reverting...'
+            Set-Busy $true
+            try {
+                $uerrs = @(Undo-JournalEntry $entry.id)
+                foreach ($er in $uerrs) { Write-Log "  ! $er" }
+                if (-not $uerrs.Count) { Write-Log '  previous settings restored' }
+            } finally { Set-Busy $false }
+        }
+    }
+    Build-NetworkSection
+}
+
+# "Keep these settings?" with a countdown. Anything but Keep (timeout, Revert, closing) reverts.
+function Show-KeepDialog([int]$Seconds, [string]$Text) {
+    if ($script:SmokeDir) { return $true }
+    $w = New-Object System.Windows.Window
+    $w.Title = 'DebloatTool'; $w.SizeToContent = 'WidthAndHeight'; $w.ResizeMode = 'NoResize'
+    $w.Owner = $script:Window; $w.WindowStartupLocation = 'CenterOwner'
+    $w.Background = Brush '#14161C'
+    $stack = New-Object System.Windows.Controls.StackPanel
+    $stack.Margin = '22'; $stack.MinWidth = 380
+    [void]$stack.Children.Add((New-Text $Text 15 '#FFFFFF' 'SemiBold' '0,0,0,6'))
+    $script:KeepLeft = $Seconds
+    $script:KeepLabel = New-Text "Reverting in $Seconds seconds." 12.5 '#9AA1B2' 'Normal' '0,0,0,16'
+    [void]$stack.Children.Add($script:KeepLabel)
+    $bar = New-Object System.Windows.Controls.StackPanel
+    $bar.Orientation = 'Horizontal'; $bar.HorizontalAlignment = 'Right'
+    $revert = New-Button 'Revert' $null
+    $revert.Add_Click({ param($s, $e) [System.Windows.Window]::GetWindow($s).Close() })
+    $keep = New-Button 'Keep changes' $null 'AccentBtn'
+    $keep.Margin = '0'
+    $keep.Add_Click({ param($s, $e) $script:KeepResult = $true; [System.Windows.Window]::GetWindow($s).Close() })
+    [void]$bar.Children.Add($revert); [void]$bar.Children.Add($keep)
+    [void]$stack.Children.Add($bar)
+    $w.Content = $stack
+    $script:KeepResult = $false
+    $script:KeepWindow = $w
+    $script:KeepTimer = New-Object System.Windows.Threading.DispatcherTimer
+    $script:KeepTimer.Interval = [TimeSpan]::FromSeconds(1)
+    $script:KeepTimer.Add_Tick({
+        $script:KeepLeft--
+        $script:KeepLabel.Text = "Reverting in $($script:KeepLeft) seconds."
+        if ($script:KeepLeft -le 0) { $script:KeepTimer.Stop(); $script:KeepWindow.Close() }
+    })
+    $w.Add_Closed({ $script:KeepTimer.Stop() })
+    $script:KeepTimer.Start()
+    [void]$w.ShowDialog()
+    $script:KeepResult
+}
+
+#endregion
 #region Maintenance page -----------------------------------------------------
 
 function Build-MaintenanceList {
@@ -972,7 +1284,7 @@ function Show-DebloatGui {
         'InstallStatus', 'InstallList', 'IsoPath', 'IsoBrowse', 'IsoDownload', 'IsoInfo', 'IsoEditions', 'OptRemoveApps',
         'OptDrivers', 'OptGraphics', 'OptEncryption', 'OptUnattend', 'UnattendFields', 'IsoUser', 'IsoPassword', 'IsoComputer', 'IsoPresets',
         'IsoBundles', 'IsoOutput', 'IsoOutputBrowse', 'IsoInstallAdk', 'IsoToolStatus', 'IsoBuildBtn', 'IsoOpenFolder',
-        'IsoGetRufus', 'IsoBuildStatus')
+        'IsoGetRufus', 'IsoBuildStatus', 'SettingsRefresh', 'SettingsSearch', 'SettingsList')
     foreach ($p in $script:Panels) { $names += "Nav$p"; $names += "Panel$p" }
     foreach ($n in $names) {
         $script:UI[$n] = $script:Window.FindName($n)
@@ -1024,6 +1336,8 @@ function Show-DebloatGui {
     $script:UI.SaveBundleBtn.Add_Click({ Save-InstallBundle })
     $script:UI.InstallClear.Add_Click({ foreach ($cb in @($script:InstallChecks.Values)) { $cb.IsChecked = $false } })
     $script:UI.InstallSearch.Add_TextChanged({ Update-InstallFilter })
+    $script:UI.SettingsSearch.Add_TextChanged({ Update-SettingsFilter })
+    $script:UI.SettingsRefresh.Add_Click({ Build-SettingsList })
     $script:UI.InstallHideInstalled.Add_Click({ Update-InstallFilter })
     $script:UI.InstallOnlyUpdates.Add_Click({ Update-InstallFilter })
     $script:UI.IsoBrowse.Add_Click({
