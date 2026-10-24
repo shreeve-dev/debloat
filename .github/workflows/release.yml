@@ -1,0 +1,64 @@
+name: Release
+
+# Push a tag like v1.0.0 to publish a release:
+#   git tag v1.0.0 && git push origin v1.0.0
+# The release gets the app zip, a SHA256SUMS file and install.ps1 (the one-line installer)
+# with that zip's hash written into it. `irm https://shreeve.dev/win | iex` always points at
+# the latest release, never at main, so an unreleased commit never reaches anyone's PC.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write       # create the release
+  id-token: write       # sign the build attestation
+  attestations: write
+
+jobs:
+  release:
+    name: Test and publish
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run tests
+        shell: powershell
+        run: |
+          & .\tests\Test-Engine.ps1
+          exit $LASTEXITCODE
+
+      - name: Build zip and installer
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = '${{ github.ref_name }}'
+          if ($version -notmatch '^v\d+\.\d+\.\d+$') { throw "Tag $version should look like v1.2.3" }
+          New-Item -ItemType Directory dist | Out-Null
+          $zip = "dist\debloattool-$version.zip"
+          git archive --format=zip -o $zip HEAD
+          if ($LASTEXITCODE) { throw 'git archive failed' }
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
+          $installer = (Get-Content tools\install.ps1 -Raw).Replace('__VERSION__', $version).Replace('__SHA256__', $hash)
+          # No byte-order mark: irm | iex chokes on one.
+          [IO.File]::WriteAllText("$PWD\dist\install.ps1", $installer, (New-Object Text.UTF8Encoding($false)))
+          $sums = foreach ($f in Get-ChildItem dist -File) { '{0}  {1}' -f (Get-FileHash $f.FullName -Algorithm SHA256).Hash.ToLower(), $f.Name }
+          [IO.File]::WriteAllText("$PWD\dist\SHA256SUMS", (($sums -join "`n") + "`n"))
+          Get-Content dist\SHA256SUMS
+
+      # Free on public repos (private repos need GitHub Enterprise), so it's skipped while private.
+      # Check a download with: gh attestation verify <file> -R shreeve-dev/debloat
+      - name: Attest build provenance
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/debloattool-*.zip
+            dist/install.ps1
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "DebloatTool $GITHUB_REF_NAME" --generate-notes --verify-tag

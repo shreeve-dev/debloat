@@ -1,0 +1,348 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DebloatTool" Width="1200" Height="840" MinWidth="980" MinHeight="640"
+        WindowStartupLocation="CenterScreen" Background="#14161C" Foreground="#E6E8EE"
+        FontFamily="Segoe UI" FontSize="13" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+  <Window.Resources>
+    <Style TargetType="Button">
+      <Setter Property="Background" Value="#2A2F3B"/>
+      <Setter Property="Foreground" Value="#E6E8EE"/>
+      <Setter Property="BorderBrush" Value="#394050"/>
+      <Setter Property="Padding" Value="14,7"/>
+      <Setter Property="Margin" Value="0,0,8,0"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Opacity" Value="0.85"/></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="b" Property="Opacity" Value="0.4"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="AccentBtn" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Background" Value="#3D7BFA"/>
+      <Setter Property="BorderBrush" Value="#3D7BFA"/>
+      <Setter Property="Foreground" Value="White"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Padding" Value="18,8"/>
+    </Style>
+    <Style x:Key="DangerBtn" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Background" Value="#3A2228"/>
+      <Setter Property="BorderBrush" Value="#5A2C35"/>
+      <Setter Property="Foreground" Value="#FFB3BA"/>
+    </Style>
+    <Style x:Key="Nav" TargetType="RadioButton">
+      <Setter Property="Foreground" Value="#C9CEDA"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="Margin" Value="10,2"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="GroupName" Value="nav"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="RadioButton">
+            <Border x:Name="b" CornerRadius="6" Padding="14,9" Background="Transparent">
+              <ContentPresenter/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="#1D212B"/></Trigger>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="b" Property="Background" Value="#26314A"/>
+                <Setter Property="Foreground" Value="White"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style TargetType="CheckBox">
+      <Setter Property="Foreground" Value="#E6E8EE"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Background" Value="#1C1F27"/>
+      <Setter Property="Foreground" Value="#E6E8EE"/>
+      <Setter Property="BorderBrush" Value="#394050"/>
+      <Setter Property="CaretBrush" Value="White"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style x:Key="H1" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="24"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style x:Key="Sub" TargetType="TextBlock">
+      <Setter Property="Foreground" Value="#8A91A3"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+      <Setter Property="Margin" Value="0,4,0,14"/>
+    </Style>
+  </Window.Resources>
+
+  <Grid Background="#14161C">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="220"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <!-- Sidebar -->
+    <Border Grid.Column="0" Background="#101217" BorderBrush="#232733" BorderThickness="0,0,1,0">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Margin="22,24,20,20">
+          <TextBlock Text="DebloatTool" FontSize="21" FontWeight="Bold" Foreground="White"/>
+          <TextBlock Text="Tune Windows. Undo anything." Foreground="#8A91A3" FontSize="12" Margin="0,4,0,0"/>
+        </StackPanel>
+        <TextBlock x:Name="AdminText" DockPanel.Dock="Bottom" Margin="22,0,18,18" Foreground="#8A91A3" FontSize="11.5" TextWrapping="Wrap"/>
+        <StackPanel>
+          <RadioButton x:Name="NavDashboard" Style="{StaticResource Nav}" Content="Dashboard" IsChecked="True"/>
+          <RadioButton x:Name="NavTweaks" Style="{StaticResource Nav}" Content="Tweaks"/>
+          <RadioButton x:Name="NavInstall" Style="{StaticResource Nav}" Content="Install apps"/>
+          <RadioButton x:Name="NavApps" Style="{StaticResource Nav}" Content="Remove apps"/>
+          <RadioButton x:Name="NavStartup" Style="{StaticResource Nav}" Content="Startup"/>
+          <RadioButton x:Name="NavMaintenance" Style="{StaticResource Nav}" Content="Maintenance"/>
+          <RadioButton x:Name="NavIso" Style="{StaticResource Nav}" Content="ISO Builder"/>
+          <RadioButton x:Name="NavHistory" Style="{StaticResource Nav}" Content="History &amp; Undo"/>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Column="1">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="110"/>
+      </Grid.RowDefinitions>
+
+      <!-- Dashboard -->
+      <ScrollViewer x:Name="PanelDashboard" Grid.Row="0" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="30,26,30,20">
+          <TextBlock Text="Dashboard" Style="{StaticResource H1}"/>
+          <TextBlock x:Name="DashInfo" Style="{StaticResource Sub}"/>
+          <WrapPanel x:Name="DashStats" Margin="0,0,0,22"/>
+          <TextBlock Text="Start with a preset" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
+          <TextBlock Text="A preset only ticks boxes. Nothing changes until you review the exact list of changes and click Apply." Style="{StaticResource Sub}"/>
+          <WrapPanel x:Name="DashPresets"/>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Tweaks -->
+      <DockPanel x:Name="PanelTweaks" Grid.Row="0" Visibility="Collapsed" Margin="30,26,18,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,12,0">
+          <TextBlock Text="Tweaks" Style="{StaticResource H1}"/>
+          <TextBlock Text="Tick what you want, then Review &amp; Apply. Every change is recorded and can be undone exactly from History &amp; Undo." Style="{StaticResource Sub}"/>
+          <WrapPanel x:Name="PresetBar" Margin="0,0,0,10"/>
+          <DockPanel Margin="0,0,0,12">
+            <Button x:Name="SelectNoneBtn" DockPanel.Dock="Right" Content="Clear selection" Margin="10,0,0,0"/>
+            <CheckBox x:Name="HideApplied" DockPanel.Dock="Right" Content="Hide applied" VerticalAlignment="Center" Margin="14,0,4,0"/>
+            <TextBlock DockPanel.Dock="Left" Text="Search" VerticalAlignment="Center" Foreground="#8A91A3" Margin="0,0,10,0"/>
+            <TextBox x:Name="TweakSearch"/>
+          </DockPanel>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="TweakList" Margin="0,0,12,18"/>
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- Install -->
+      <DockPanel x:Name="PanelInstall" Grid.Row="0" Visibility="Collapsed" Margin="30,26,18,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,12,0">
+          <TextBlock Text="Install apps" Style="{StaticResource H1}"/>
+          <TextBlock Text="Pick apps or a bundle, then Install. Installs run through winget in their own window, so you can watch progress and keep using this one. Installing accepts each app's licence." Style="{StaticResource Sub}"/>
+          <WrapPanel x:Name="InstallBundles" Margin="0,0,0,8"/>
+          <WrapPanel Margin="0,0,0,10">
+            <Button x:Name="InstallBtn" Style="{StaticResource AccentBtn}" Content="Install selected" Margin="0,0,8,6"/>
+            <Button x:Name="UpgradeBtn" Content="Update selected" Margin="0,0,8,6"/>
+            <Button x:Name="UninstallBtn" Style="{StaticResource DangerBtn}" Content="Uninstall selected" Margin="0,0,8,6"/>
+            <Button x:Name="InstallClear" Content="Clear" Margin="0,0,8,6"/>
+            <Button x:Name="InstallRefresh" Content="Refresh" Margin="0,0,8,6"/>
+            <Button x:Name="SaveBundleBtn" Content="Save selection as bundle" Margin="0,0,8,6"/>
+          </WrapPanel>
+          <DockPanel Margin="0,0,0,10">
+            <CheckBox x:Name="InstallOnlyUpdates" DockPanel.Dock="Right" Content="Only updates available" VerticalAlignment="Center" Margin="14,0,0,0"/>
+            <CheckBox x:Name="InstallHideInstalled" DockPanel.Dock="Right" Content="Hide installed" VerticalAlignment="Center" Margin="14,0,0,0"/>
+            <TextBlock DockPanel.Dock="Left" Text="Search" VerticalAlignment="Center" Foreground="#8A91A3" Margin="0,0,10,0"/>
+            <TextBox x:Name="InstallSearch"/>
+          </DockPanel>
+          <TextBlock x:Name="InstallStatus" Foreground="#C9CEDA" Margin="0,0,0,6"/>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="InstallList" Margin="0,0,12,18"/>
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- Apps -->
+      <DockPanel x:Name="PanelApps" Grid.Row="0" Visibility="Collapsed" Margin="30,26,18,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,12,0">
+          <TextBlock Text="Remove apps" Style="{StaticResource H1}"/>
+          <TextBlock Text="Built-in Microsoft Store apps installed for your account. Tick the ones to remove, then Review &amp; Apply. Undo re-registers the app if Windows still has its files, otherwise it opens the Store page." Style="{StaticResource Sub}"/>
+          <WrapPanel Margin="0,0,0,12">
+            <Button x:Name="AppSelectRecommended" Content="Select recommended"/>
+            <Button x:Name="AppSelectNone" Content="Clear"/>
+            <Button x:Name="AppRefresh" Content="Refresh"/>
+            <CheckBox x:Name="AppDeprovision" Content="Also remove for new user accounts" VerticalAlignment="Center" Margin="8,0,0,0"
+                      ToolTip="Removes Windows' stored copy so new accounts don't get the app. This copy cannot be restored by undo."/>
+          </WrapPanel>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="AppList" Margin="0,0,12,18"/>
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- Startup -->
+      <DockPanel x:Name="PanelStartup" Grid.Row="0" Visibility="Collapsed" Margin="30,26,18,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,12,0">
+          <TextBlock Text="Startup programs" Style="{StaticResource H1}"/>
+          <TextBlock Text="Programs that start when you sign in. Disabling works like Task Manager: nothing is deleted, and you can turn it back on any time. Changes apply immediately." Style="{StaticResource Sub}"/>
+          <WrapPanel Margin="0,0,0,12">
+            <Button x:Name="StartupRefresh" Content="Refresh"/>
+          </WrapPanel>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="StartupList" Margin="0,0,12,18"/>
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- Maintenance -->
+      <DockPanel x:Name="PanelMaintenance" Grid.Row="0" Visibility="Collapsed" Margin="30,26,18,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,12,0">
+          <TextBlock Text="Maintenance" Style="{StaticResource H1}"/>
+          <TextBlock Text="One-off clean-up and repair jobs. Long jobs open in their own window so you can keep using this one." Style="{StaticResource Sub}"/>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="MaintList" Margin="0,0,12,18"/>
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- ISO Builder -->
+      <ScrollViewer x:Name="PanelIso" Grid.Row="0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="30,26,30,24" MaxWidth="980" HorizontalAlignment="Left">
+          <TextBlock Text="ISO Builder" Style="{StaticResource H1}"/>
+          <TextBlock Style="{StaticResource Sub}" Text="Make a Windows installer that sets itself up: bloat removed, this PC's drivers built in, no setup questions, and your preset and apps applied on first sign-in. You still choose which drive to install to. That step is never automated, so the USB can't wipe a disk on its own."/>
+
+          <Border Background="#1B1E26" BorderBrush="#2A2F3B" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="1. Windows ISO" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
+              <DockPanel>
+                <Button x:Name="IsoDownload" DockPanel.Dock="Right" Content="Get it from Microsoft" Margin="8,0,0,0"/>
+                <Button x:Name="IsoBrowse" DockPanel.Dock="Right" Content="Browse..." Margin="8,0,0,0"/>
+                <TextBox x:Name="IsoPath"/>
+              </DockPanel>
+              <TextBlock x:Name="IsoInfo" Foreground="#8A91A3" Margin="0,8,0,6" TextWrapping="Wrap"/>
+              <WrapPanel x:Name="IsoEditions"/>
+            </StackPanel>
+          </Border>
+
+          <Border Background="#1B1E26" BorderBrush="#2A2F3B" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="2. Clean up the image" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
+              <CheckBox x:Name="OptRemoveApps" IsChecked="True" Margin="0,0,0,6" Content="Remove bloat apps (the &quot;Recommended to remove&quot; list) so they are never installed"/>
+              <CheckBox x:Name="OptDrivers" IsChecked="True" Margin="0,0,0,6" Content="Add the drivers this PC is using (network, chipset, audio, USB devices) so everything works straight away"/>
+              <CheckBox x:Name="OptGraphics" IsChecked="False" Margin="24,0,0,2" Content="Include graphics drivers too (adds about 3-4 GB)"/>
+              <TextBlock Foreground="#6F7790" FontSize="11.5" Margin="48,0,0,8" TextWrapping="Wrap" Text="Usually not worth it: Windows Update installs a working graphics driver on first boot, and the NVIDIA App installs the newest one."/>
+              <CheckBox x:Name="OptEncryption" IsChecked="False" Content="Stop Windows turning on drive encryption (BitLocker) by itself"/>
+              <TextBlock Foreground="#6F7790" FontSize="11.5" Margin="24,2,0,0" TextWrapping="Wrap" Text="Windows 11 can encrypt the drive automatically. With a local account the recovery key isn't saved anywhere, so tick this if you never want that."/>
+            </StackPanel>
+          </Border>
+
+          <Border Background="#1B1E26" BorderBrush="#2A2F3B" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,10">
+            <StackPanel>
+              <CheckBox x:Name="OptUnattend" IsChecked="True" Margin="0,0,0,10">
+                <TextBlock Text="3. Skip the Windows setup screens" FontSize="15" FontWeight="SemiBold" Foreground="White"/>
+              </CheckBox>
+              <Grid x:Name="UnattendFields">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="150"/>
+                  <ColumnDefinition Width="260"/>
+                  <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="Account name" Foreground="#C9CEDA" VerticalAlignment="Center"/>
+                <TextBox x:Name="IsoUser" Grid.Row="0" Grid.Column="1" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="1" Text="Password (optional)" Foreground="#C9CEDA" VerticalAlignment="Center"/>
+                <PasswordBox x:Name="IsoPassword" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Padding="8,6" Background="#1C1F27" Foreground="#E6E8EE" BorderBrush="#394050"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Margin="12,0,0,8" Foreground="#6F7790" FontSize="11.5" TextWrapping="Wrap" VerticalAlignment="Center"
+                           Text="Stored lightly encoded on the USB, then deleted from the PC after setup. Leave blank and set one later if others may use the USB."/>
+                <TextBlock Grid.Row="2" Text="Computer name" Foreground="#C9CEDA" VerticalAlignment="Center"/>
+                <TextBox x:Name="IsoComputer" Grid.Row="2" Grid.Column="1"/>
+              </Grid>
+              <TextBlock Foreground="#6F7790" FontSize="11.5" Margin="0,8,0,0" TextWrapping="Wrap"
+                         Text="Creates a local administrator account. No Microsoft account, privacy or &quot;connect your phone&quot; screens. Language, keyboard and time zone are copied from this PC."/>
+            </StackPanel>
+          </Border>
+
+          <Border Background="#1B1E26" BorderBrush="#2A2F3B" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="4. On first sign-in" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
+              <TextBlock Text="Apply this DebloatTool preset:" Foreground="#C9CEDA" Margin="0,0,0,6"/>
+              <WrapPanel x:Name="IsoPresets" Margin="0,0,0,10"/>
+              <TextBlock Text="Install these bundles (latest versions, through winget):" Foreground="#C9CEDA" Margin="0,0,0,6"/>
+              <WrapPanel x:Name="IsoBundles"/>
+              <TextBlock Foreground="#6F7790" FontSize="11.5" Margin="0,8,0,0" TextWrapping="Wrap"
+                         Text="Needs internet on first boot (a network cable is easiest). DebloatTool is copied to C:\DebloatTool and its changes appear in History &amp; Undo like normal."/>
+            </StackPanel>
+          </Border>
+
+          <Border Background="#1B1E26" BorderBrush="#2A2F3B" BorderThickness="1" CornerRadius="8" Padding="16,14" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="5. Build" FontSize="15" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8"/>
+              <DockPanel Margin="0,0,0,8">
+                <TextBlock DockPanel.Dock="Left" Text="Save ISO to" Foreground="#C9CEDA" VerticalAlignment="Center" Width="150"/>
+                <Button x:Name="IsoOutputBrowse" DockPanel.Dock="Right" Content="Browse..." Margin="8,0,0,0"/>
+                <TextBox x:Name="IsoOutput"/>
+              </DockPanel>
+              <DockPanel Margin="0,0,0,10">
+                <Button x:Name="IsoInstallAdk" DockPanel.Dock="Right" Content="Install ISO tool" Margin="8,0,0,0"/>
+                <TextBlock x:Name="IsoToolStatus" Foreground="#C9CEDA" VerticalAlignment="Center" TextWrapping="Wrap"/>
+              </DockPanel>
+              <WrapPanel>
+                <Button x:Name="IsoBuildBtn" Style="{StaticResource AccentBtn}" Content="Build ISO"/>
+                <Button x:Name="IsoOpenFolder" Content="Open output folder"/>
+                <Button x:Name="IsoGetRufus" Content="Get Rufus (to write the USB)"/>
+              </WrapPanel>
+              <TextBlock x:Name="IsoBuildStatus" Foreground="#C9CEDA" Margin="0,10,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- History -->
+      <DockPanel x:Name="PanelHistory" Grid.Row="0" Visibility="Collapsed" Margin="30,26,18,0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,12,0">
+          <TextBlock Text="History &amp; Undo" Style="{StaticResource H1}"/>
+          <TextBlock x:Name="HistoryInfo" Style="{StaticResource Sub}"/>
+          <WrapPanel Margin="0,0,0,12">
+            <Button x:Name="UndoAllBtn" Style="{StaticResource DangerBtn}" Content="Undo everything"/>
+            <Button x:Name="HistoryRefresh" Content="Refresh"/>
+          </WrapPanel>
+        </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="HistoryList" Margin="0,0,12,18"/>
+        </ScrollViewer>
+      </DockPanel>
+
+      <!-- Action bar -->
+      <Border x:Name="ActionBar" Grid.Row="1" Background="#181B22" BorderBrush="#232733" BorderThickness="0,1,0,1" Padding="30,12">
+        <DockPanel>
+          <Button x:Name="ApplyBtn" DockPanel.Dock="Right" Style="{StaticResource AccentBtn}" Content="Review &amp; Apply" Margin="0"/>
+          <CheckBox x:Name="RestorePointCheck" DockPanel.Dock="Right" Content="Create a restore point first" IsChecked="True"
+                    VerticalAlignment="Center" Margin="0,0,18,0"/>
+          <TextBlock x:Name="SelectionSummary" VerticalAlignment="Center" Foreground="#C9CEDA"/>
+        </DockPanel>
+      </Border>
+
+      <!-- Log -->
+      <TextBox x:Name="LogBox" Grid.Row="2" IsReadOnly="True" FontFamily="Consolas" FontSize="12"
+               Background="#0E1014" Foreground="#AEB5C4" BorderThickness="0" Padding="18,8"
+               VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
+    </Grid>
+  </Grid>
+</Window>

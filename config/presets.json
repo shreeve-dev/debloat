@@ -1,0 +1,56 @@
+{
+  "presets": [
+    {
+      "name": "Recommended",
+      "description": "Safe privacy, ad and quality-of-life fixes almost everyone wants. Removes obvious bloat apps.",
+      "maxRisk": "safe",
+      "tweaks": [
+        "privacy.*", "ai.*", "ads.*",
+        "taskbar.widgets", "taskbar.endtask",
+        "explorer.extensions", "explorer.folderdiscovery",
+        "qol.stickykeys", "qol.startupdelay", "qol.menudelay",
+        "wu.noautoreboot", "wu.deliveryopt",
+        "vendor.devicemetadata"
+      ],
+      "apps": "recommended"
+    },
+    {
+      "name": "Gaming",
+      "description": "Recommended, plus Game Mode, no background recording, raw mouse input, GPU scheduling and the Ultimate Performance plan. Keeps Xbox components.",
+      "maxRisk": "moderate",
+      "tweaks": [
+        "privacy.telemetry", "privacy.adid", "privacy.activity", "privacy.tailored", "privacy.feedback", "privacy.inking",
+        "ai.*", "ads.autoinstall", "ads.tips", "ads.settings", "ads.lockscreen", "ads.start", "ads.explorer", "ads.bing",
+        "taskbar.widgets", "taskbar.endtask",
+        "explorer.extensions", "explorer.folderdiscovery",
+        "qol.stickykeys", "qol.startupdelay", "qol.menudelay",
+        "gaming.*", "perf.power",
+        "wu.noautoreboot", "wu.deliveryopt",
+        "vendor.devicemetadata"
+      ],
+      "apps": "recommended"
+    },
+    {
+      "name": "Privacy",
+      "description": "Every privacy, AI and advertising tweak, including location and error reporting.",
+      "maxRisk": "moderate",
+      "tweaks": [ "privacy.*", "ai.*", "ads.*", "wu.deliveryopt", "vendor.devicemetadata" ],
+      "apps": "recommended"
+    },
+    {
+      "name": "Clean desktop",
+      "description": "The look-and-feel favourites: classic right-click menu, left taskbar, file extensions, dark mode, This PC and more. No apps removed.",
+      "maxRisk": "safe",
+      "tweaks": [ "taskbar.*", "start.*", "explorer.*", "qol.*" ],
+      "exclude": [ "taskbar.seconds", "explorer.hidden", "qol.verbose", "qol.bsod" ],
+      "apps": "none"
+    },
+    {
+      "name": "Everything",
+      "description": "All safe and moderate tweaks. Read the warnings on the Tweaks page before applying.",
+      "maxRisk": "moderate",
+      "tweaks": [ "*" ],
+      "apps": "recommended"
+    }
+  ]
+}

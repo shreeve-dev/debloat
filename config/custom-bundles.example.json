@@ -1,0 +1,9 @@
+{
+  "bundles": [
+    {
+      "name": "My PC",
+      "description": "Example of your own bundle. Copy this file to custom-bundles.json and list your apps.",
+      "apps": [ "Google.Chrome", "Discord.Discord", "Valve.Steam", "Spotify.Spotify", "NVIDIA App" ]
+    }
+  ]
+}

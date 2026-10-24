@@ -1,0 +1,45 @@
+# Disk images and Windows images
+*.iso
+*.wim
+*.esd
+*.swm
+*.vhd
+*.vhdx
+
+# Driver exports
+drivers/
+Drivers/
+*.inf
+*.sys
+*.cat
+
+# Build output and scratch space
+out/
+Out/
+build/
+dist/
+mount/
+scratch/
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# ISO build job / settings files (can contain the account password)
+*.job.json
+*-settings.json
+settings*.json
+autounattend.xml
+unattend.xml
+
+# Per-user settings saved by the app
+config/custom-bundles.json
+journal.json
+
+# Editor / OS clutter
+.vs/
+.vscode/
+*.user
+Thumbs.db
+desktop.ini

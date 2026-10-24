@@ -1,0 +1,153 @@
+{
+  "categories": [
+    "Hardware & RGB",
+    "Browsers",
+    "Communication",
+    "Gaming",
+    "AI",
+    "Monitoring & Benchmarks",
+    "GPU Tools",
+    "Media & Streaming",
+    "Audio",
+    "Utilities",
+    "Windows Power Tools",
+    "Productivity",
+    "Security & Network",
+    "Developer",
+    "Runtimes"
+  ],
+
+  "apps": [
+    { "id": "LianLi.LConnect3", "name": "L-Connect 3", "category": "Hardware & RGB", "arp": "L-Connect*", "description": "Lian Li fans, pumps and UNI hub lighting." },
+    { "id": "Asus.ArmouryCrate", "name": "Armoury Crate", "category": "Hardware & RGB", "arp": "Armoury Crate*", "description": "ASUS motherboard RGB (Aura), fan curves and driver updates." },
+    { "id": "Corsair.iCUE.5", "name": "Corsair iCUE 5", "category": "Hardware & RGB", "arp": "*iCUE*", "description": "Corsair RAM, peripherals and cooler lighting." },
+    { "id": "Logitech.GHUB", "name": "Logitech G HUB", "category": "Hardware & RGB", "arp": "Logitech G HUB*", "description": "Logitech mouse, keyboard and headset settings." },
+    { "id": "WhirlwindFX.SignalRgb", "name": "SignalRGB", "category": "Hardware & RGB", "arp": "SignalRgb*", "description": "One app that controls Lian Li, ASUS, Corsair and Logitech lighting together, with synced effects. Could replace several vendor apps." },
+    { "id": "OpenRGB.OpenRGB", "name": "OpenRGB", "category": "Hardware & RGB", "description": "Free, open-source, lightweight RGB control for most brands. No account, no background bloat." },
+    { "name": "NVIDIA App", "category": "Hardware & RGB", "arp": "NVIDIA App*", "url": "https://www.nvidia.com/en-us/software/nvidia-app/", "description": "GeForce drivers, game settings, ShadowPlay recording. Not in winget, so this opens NVIDIA's download page." },
+
+    { "id": "Google.Chrome", "name": "Google Chrome", "category": "Browsers", "description": "Google's browser." },
+    { "id": "Mozilla.Firefox", "name": "Firefox", "category": "Browsers", "description": "Independent, privacy-focused browser." },
+    { "id": "Brave.Brave", "name": "Brave", "category": "Browsers", "description": "Chromium-based browser with built-in ad blocking." },
+    { "id": "Vivaldi.Vivaldi", "name": "Vivaldi", "category": "Browsers", "description": "Highly customisable Chromium-based browser." },
+
+    { "id": "Discord.Discord", "name": "Discord", "category": "Communication", "description": "Voice, video and text chat." },
+    { "id": "SlackTechnologies.Slack", "name": "Slack", "category": "Communication", "description": "Team chat." },
+    { "id": "Zoom.Zoom", "name": "Zoom", "category": "Communication", "description": "Video meetings." },
+    { "id": "Microsoft.Teams", "name": "Microsoft Teams", "category": "Communication", "description": "Work and school chat and meetings." },
+    { "id": "Telegram.TelegramDesktop", "name": "Telegram", "category": "Communication", "description": "Cloud messaging." },
+    { "id": "OpenWhisperSystems.Signal", "name": "Signal", "category": "Communication", "description": "End-to-end encrypted messaging." },
+
+    { "id": "Valve.Steam", "name": "Steam", "category": "Gaming", "description": "Valve's game store and launcher." },
+    { "id": "EpicGames.EpicGamesLauncher", "name": "Epic Games Launcher", "category": "Gaming", "description": "Epic's store, free weekly games, Fortnite." },
+    { "id": "GOG.Galaxy", "name": "GOG Galaxy", "category": "Gaming", "description": "DRM-free games and a launcher that can combine your other libraries." },
+    { "id": "ElectronicArts.EADesktop", "name": "EA app", "category": "Gaming", "description": "EA games." },
+    { "id": "Ubisoft.Connect", "name": "Ubisoft Connect", "category": "Gaming", "description": "Ubisoft games." },
+    { "id": "Blizzard.BattleNet", "name": "Battle.net", "category": "Gaming", "description": "Blizzard and Call of Duty games." },
+    { "id": "Overwolf.CurseForge", "name": "CurseForge", "category": "Gaming", "description": "Mod manager for Minecraft, WoW and more." },
+    { "id": "PrismLauncher.PrismLauncher", "name": "Prism Launcher", "category": "Gaming", "description": "Lightweight Minecraft launcher with easy modpack instances." },
+    { "id": "Playnite.Playnite", "name": "Playnite", "category": "Gaming", "description": "One library for all your launchers. Open source." },
+    { "id": "Nvidia.GeForceNow", "name": "GeForce NOW", "category": "Gaming", "description": "NVIDIA cloud gaming." },
+    { "id": "MoonlightGameStreamingProject.Moonlight", "name": "Moonlight", "category": "Gaming", "description": "Stream games from this PC to a laptop, phone or TV. Pair with Sunshine." },
+    { "id": "LizardByte.Sunshine", "name": "Sunshine", "category": "Gaming", "description": "Game-streaming host for Moonlight. Works well over Tailscale." },
+    { "id": "Parsec.Parsec", "name": "Parsec", "category": "Gaming", "description": "Low-latency remote desktop for games and couch co-op." },
+
+    { "id": "Anthropic.Claude", "name": "Claude Desktop", "category": "AI", "description": "Anthropic's Claude app." },
+    { "id": "Anthropic.ClaudeCode", "name": "Claude Code (CLI)", "category": "AI", "description": "Claude in the terminal for coding tasks." },
+    { "id": "Ollama.Ollama", "name": "Ollama", "category": "AI", "description": "Run open AI models locally on your GPU." },
+
+    { "id": "REALiX.HWiNFO", "name": "HWiNFO", "category": "Monitoring & Benchmarks", "description": "The best all-round sensor monitor: temps, clocks, voltages, fan speeds." },
+    { "id": "Guru3D.Afterburner", "name": "MSI Afterburner", "category": "Monitoring & Benchmarks", "description": "GPU overclocking, fan curves and the classic in-game FPS overlay." },
+    { "id": "CPUID.CPU-Z", "name": "CPU-Z", "category": "Monitoring & Benchmarks", "description": "CPU, motherboard and RAM details (check your XMP/EXPO speed)." },
+    { "id": "CPUID.HWMonitor", "name": "HWMonitor", "category": "Monitoring & Benchmarks", "description": "Simple temperature and voltage monitor." },
+    { "id": "TechPowerUp.GPU-Z", "name": "GPU-Z", "category": "Monitoring & Benchmarks", "description": "Graphics card details and sensors." },
+    { "id": "CrystalDewWorld.CrystalDiskInfo", "name": "CrystalDiskInfo", "category": "Monitoring & Benchmarks", "description": "SSD and hard drive health." },
+    { "id": "CrystalDewWorld.CrystalDiskMark", "name": "CrystalDiskMark", "category": "Monitoring & Benchmarks", "description": "Drive speed benchmark." },
+
+    { "id": "TechPowerUp.NVCleanstall", "name": "NVCleanstall", "category": "GPU Tools", "description": "Install NVIDIA drivers without telemetry and the extras you don't want." },
+    { "id": "Wagnardsoft.DisplayDriverUninstaller", "name": "Display Driver Uninstaller", "category": "GPU Tools", "description": "Fully removes GPU drivers. The go-to fix for driver problems." },
+    { "id": "Orbmu2k.nvidiaProfileInspector", "name": "NVIDIA Profile Inspector", "category": "GPU Tools", "description": "Advanced per-game NVIDIA driver settings." },
+
+    { "id": "VideoLAN.VLC", "name": "VLC", "category": "Media & Streaming", "description": "Plays any video or audio file." },
+    { "id": "Spotify.Spotify", "name": "Spotify", "category": "Media & Streaming", "noAdmin": true, "description": "Music streaming." },
+    { "id": "OBSProject.OBSStudio", "name": "OBS Studio", "category": "Media & Streaming", "description": "Recording and live streaming." },
+    { "id": "Elgato.StreamDeck", "name": "Elgato Stream Deck", "category": "Media & Streaming", "description": "Software for Stream Deck controllers." },
+    { "id": "HandBrake.HandBrake", "name": "HandBrake", "category": "Media & Streaming", "description": "Video converter and compressor." },
+    { "id": "GIMP.GIMP.3", "name": "GIMP", "category": "Media & Streaming", "description": "Free image editor." },
+    { "id": "BlenderFoundation.Blender", "name": "Blender", "category": "Media & Streaming", "description": "3D modelling and animation." },
+
+    { "name": "Focusrite Scarlett 3rd Gen driver", "category": "Audio", "arp": "Focusrite Audio Drivers*", "url": "https://downloads.focusrite.com/", "description": "Driver for Scarlett 3rd Gen interfaces (Solo, 2i2, 4i4...), needed for low-latency ASIO audio. Not in winget, so this opens Focusrite's download site." },
+    { "id": "FocusriteAudioEngineeringLtd.FocusriteControl2", "name": "Focusrite Control 2", "category": "Audio", "arp": "Focusrite Control 2*", "description": "Settings app for 4th Gen Scarlett and Vocaster interfaces only. Not needed for a 3rd Gen Scarlett Solo." },
+    { "id": "Audacity.Audacity", "name": "Audacity", "category": "Audio", "description": "Audio recording and editing." },
+    { "id": "File-New-Project.EarTrumpet", "name": "EarTrumpet", "category": "Audio", "description": "Per-app volume from the taskbar and quick output switching. Great with an audio interface." },
+    { "id": "VB-Audio.Voicemeeter.Banana", "name": "Voicemeeter Banana", "category": "Audio", "description": "Virtual audio mixer for routing mic, game and music separately." },
+
+    { "id": "7zip.7zip", "name": "7-Zip", "category": "Utilities", "description": "Open zip, rar, 7z and more." },
+    { "id": "voidtools.Everything", "name": "Everything", "category": "Utilities", "description": "Instant file search across all your drives." },
+    { "id": "Microsoft.PowerToys", "name": "PowerToys", "category": "Utilities", "description": "Microsoft's power-user extras: FancyZones, PowerRename, Color Picker, Run and more." },
+    { "id": "ShareX.ShareX", "name": "ShareX", "category": "Utilities", "description": "Screenshots, screen recording and uploads." },
+    { "id": "Greenshot.Greenshot", "name": "Greenshot", "category": "Utilities", "description": "Simple screenshot tool with quick annotations." },
+    { "id": "Notepad++.Notepad++", "name": "Notepad++", "category": "Utilities", "description": "Text and code editor." },
+    { "id": "AntibodySoftware.WizTree", "name": "WizTree", "category": "Utilities", "description": "See what is filling your drives, in seconds." },
+    { "id": "RevoUninstaller.RevoUninstaller", "name": "Revo Uninstaller", "category": "Utilities", "description": "Uninstalls apps and cleans up their leftovers." },
+    { "id": "Rufus.Rufus", "name": "Rufus", "category": "Utilities", "description": "Make bootable USB drives (Windows installs, Linux)." },
+    { "id": "qBittorrent.qBittorrent", "name": "qBittorrent", "category": "Utilities", "description": "Ad-free torrent client." },
+
+    { "id": "Microsoft.Sysinternals.ProcessExplorer", "name": "Process Explorer", "category": "Windows Power Tools", "description": "Task Manager on steroids: see exactly what every process is doing." },
+    { "id": "Microsoft.Sysinternals.Autoruns", "name": "Autoruns", "category": "Windows Power Tools", "description": "Every program, service and task that starts with Windows, in one place." },
+    { "id": "Microsoft.Sysinternals.ProcessMonitor", "name": "Process Monitor", "category": "Windows Power Tools", "description": "Live file, registry and network activity (the tool you captured earlier)." },
+    { "id": "Flow-Launcher.Flow-Launcher", "name": "Flow Launcher", "category": "Windows Power Tools", "description": "Fast keyboard launcher for apps, files and web search." },
+    { "id": "Nilesoft.Shell", "name": "Nilesoft Shell", "category": "Windows Power Tools", "description": "Fully customisable right-click menu." },
+    { "id": "StartIsBack.StartAllBack", "name": "StartAllBack", "category": "Windows Power Tools", "description": "Windows 10-style Start menu and taskbar on Windows 11. Paid after the trial." },
+
+    { "id": "Obsidian.Obsidian", "name": "Obsidian", "category": "Productivity", "description": "Notes stored as local Markdown files." },
+    { "id": "Notion.Notion", "name": "Notion", "category": "Productivity", "description": "Notes, docs and project boards." },
+    { "id": "Microsoft.Office", "name": "Microsoft 365 Apps", "category": "Productivity", "description": "Word, Excel, PowerPoint, Outlook. Needs a Microsoft 365 licence." },
+
+    { "id": "Bitwarden.Bitwarden", "name": "Bitwarden", "category": "Security & Network", "description": "Open-source password manager." },
+    { "id": "KeeperSecurity.KeeperDesktop", "name": "Keeper", "category": "Security & Network", "description": "Password manager." },
+    { "id": "Malwarebytes.Malwarebytes", "name": "Malwarebytes", "category": "Security & Network", "description": "Second-opinion malware scanner." },
+    { "id": "Tailscale.Tailscale", "name": "Tailscale", "category": "Security & Network", "description": "Private network between your devices." },
+    { "id": "WireGuard.WireGuard", "name": "WireGuard", "category": "Security & Network", "description": "Fast, modern VPN client." },
+    { "id": "Proton.ProtonVPN", "name": "Proton VPN", "category": "Security & Network", "description": "Privacy VPN with a free tier." },
+
+    { "id": "Microsoft.VisualStudioCode", "name": "Visual Studio Code", "category": "Developer", "description": "Code editor." },
+    { "id": "Git.Git", "name": "Git", "category": "Developer", "description": "Version control." },
+    { "id": "GitHub.GitHubDesktop", "name": "GitHub Desktop", "category": "Developer", "description": "Git with a friendly interface." },
+    { "id": "OpenJS.NodeJS.LTS", "name": "Node.js LTS", "category": "Developer", "description": "JavaScript runtime." },
+    { "id": "Python.Python.3.13", "name": "Python 3.13", "category": "Developer", "description": "Python. Also fixes the \"python opens the Microsoft Store\" problem." },
+    { "id": "Microsoft.PowerShell", "name": "PowerShell 7", "category": "Developer", "description": "The modern, cross-platform PowerShell." },
+    { "id": "Microsoft.WindowsTerminal", "name": "Windows Terminal", "category": "Developer", "description": "Tabbed terminal for PowerShell, CMD and WSL." },
+
+    { "id": "Microsoft.VCRedist.2015+.x64", "name": "Visual C++ Redistributable (x64)", "category": "Runtimes", "description": "Needed by most games and apps." },
+    { "id": "Microsoft.VCRedist.2015+.x86", "name": "Visual C++ Redistributable (x86)", "category": "Runtimes", "description": "Needed by older 32-bit games and apps." },
+    { "id": "Microsoft.DotNet.DesktopRuntime.8", "name": ".NET 8 Desktop Runtime", "category": "Runtimes", "description": "Needed by many Windows apps (including several RGB tools)." },
+    { "id": "Microsoft.DirectX", "name": "DirectX End-User Runtime", "category": "Runtimes", "description": "Older DirectX files some games still need." },
+    { "id": "Nvidia.PhysX", "name": "NVIDIA PhysX", "category": "Runtimes", "description": "Physics runtime used by some older games." }
+  ],
+
+  "bundles": [
+    {
+      "name": "Fresh install essentials",
+      "description": "What almost every new Windows install needs.",
+      "apps": [ "Google.Chrome", "7zip.7zip", "VideoLAN.VLC", "voidtools.Everything", "Microsoft.PowerToys",
+                "Microsoft.VCRedist.2015+.x64", "Microsoft.VCRedist.2015+.x86", "Microsoft.DotNet.DesktopRuntime.8" ]
+    },
+    {
+      "name": "Gaming",
+      "description": "Launchers, monitoring and the runtimes games need.",
+      "apps": [ "Valve.Steam", "EpicGames.EpicGamesLauncher", "Discord.Discord", "REALiX.HWiNFO", "Guru3D.Afterburner",
+                "Microsoft.VCRedist.2015+.x64", "Microsoft.VCRedist.2015+.x86", "Microsoft.DirectX", "Microsoft.DotNet.DesktopRuntime.8" ]
+    },
+    {
+      "name": "Streaming",
+      "description": "Go live or record with good audio.",
+      "apps": [ "OBSProject.OBSStudio", "Elgato.StreamDeck", "File-New-Project.EarTrumpet", "VB-Audio.Voicemeeter.Banana", "Discord.Discord" ]
+    },
+    {
+      "name": "Developer",
+      "description": "Editor, version control and runtimes.",
+      "apps": [ "Microsoft.VisualStudioCode", "Git.Git", "GitHub.GitHubDesktop", "OpenJS.NodeJS.LTS", "Python.Python.3.13", "Microsoft.PowerShell", "Anthropic.ClaudeCode" ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+name: Tests
+
+# Runs tests/Test-Engine.ps1 on a clean Windows machine.
+# The tests only touch HKCU\Software\DebloatToolTest and a temp folder,
+# so nothing on the runner is debloated or changed beyond that.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'Run.bat', 'ui/**']
+  pull_request:
+    paths-ignore: ['**.md', 'Run.bat', 'ui/**']
+  workflow_dispatch:
+
+# A newer push to the same branch or PR cancels the older run (saves minutes).
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test-Engine (Windows PowerShell 5.1)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run tests
+        shell: powershell
+        run: |
+          $PSVersionTable.PSVersion
+          # Make sure a personal bundles file never sneaks into the run.
+          if (Test-Path config\custom-bundles.json) { throw 'config/custom-bundles.json should not be in the repo' }
+          & .\tests\Test-Engine.ps1
+          exit $LASTEXITCODE
