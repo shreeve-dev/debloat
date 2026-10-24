@@ -472,6 +472,8 @@ function Undo-Change($Change) {
         'netadapter' { Set-NetAdapterConfig $Change.prior }
         'computername' { Set-PcName $Change.prior }
         'workgroup' { Add-Computer -WorkgroupName $Change.prior -Force -ErrorAction Stop -WarningAction SilentlyContinue }
+        'audiodevice' { Set-AudioDeviceEnabled $Change.instanceId ([bool]$Change.prior) }
+        'audiodefault' { if ($Change.prior) { Set-AudioDefault $Change.prior @($Change.roles | ForEach-Object { [int]$_ }) } }
         default   { throw "Unknown change kind '$($Change.kind)'" }
     }
 }

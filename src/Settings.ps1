@@ -1,6 +1,7 @@
 # Settings.ps1
-# The Settings page: common Windows settings as simple choices, and network adapter setup
-# (automatic or static IP, DNS servers). Every change is saved to History and can be undone.
+# The Settings page: common Windows settings as simple choices, network adapter setup
+# (automatic or static IP, DNS servers), PC name and domain, and sound devices.
+# Every change is saved to History; most can be undone.
 
 #region Windows settings -----------------------------------------------------
 
@@ -324,6 +325,239 @@ function Remove-DomainJoin([string]$Workgroup, [pscredential]$Credential) {
     if ($Credential) { $p.UnjoinDomainCredential = $Credential }
     Remove-Computer @p
     "Left $($id.Domain) and joined the $($Workgroup.Trim()) workgroup. Restart to finish. Sign in with a local account afterwards."
+}
+
+#endregion
+#region Sound devices ---------------------------------------------------------
+
+# Default devices are read and set through Windows' audio COM interfaces. Windows has no
+# public way to set the default device, so this uses IPolicyConfig like the Sound panel does.
+$script:AudioInteropSource = @'
+using System;
+using System.Runtime.InteropServices;
+namespace DebloatTool {
+    [ComImport, Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IMMDeviceEnumerator {
+        [PreserveSig] int EnumAudioEndpoints(int dataFlow, int stateMask, out IntPtr devices);
+        [PreserveSig] int GetDefaultAudioEndpoint(int dataFlow, int role, out IMMDevice endpoint);
+    }
+    [ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IMMDevice {
+        [PreserveSig] int Activate(ref Guid iid, int clsCtx, IntPtr activationParams, out IntPtr result);
+        [PreserveSig] int OpenPropertyStore(int access, out IntPtr store);
+        [PreserveSig] int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
+        [PreserveSig] int GetState(out int state);
+    }
+    [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")] class MMDeviceEnumeratorClass { }
+    [ComImport, Guid("F8679F50-850A-41CF-9C72-430F290290C8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IPolicyConfig {
+        [PreserveSig] int GetMixFormat(IntPtr a, IntPtr b);
+        [PreserveSig] int GetDeviceFormat(IntPtr a, int b, IntPtr c);
+        [PreserveSig] int ResetDeviceFormat(IntPtr a);
+        [PreserveSig] int SetDeviceFormat(IntPtr a, IntPtr b, IntPtr c);
+        [PreserveSig] int GetProcessingPeriod(IntPtr a, int b, IntPtr c, IntPtr d);
+        [PreserveSig] int SetProcessingPeriod(IntPtr a, IntPtr b);
+        [PreserveSig] int GetShareMode(IntPtr a, IntPtr b);
+        [PreserveSig] int SetShareMode(IntPtr a, IntPtr b);
+        [PreserveSig] int GetPropertyValue(IntPtr a, IntPtr b, IntPtr c);
+        [PreserveSig] int SetPropertyValue(IntPtr a, IntPtr b, IntPtr c);
+        [PreserveSig] int SetDefaultEndpoint([MarshalAs(UnmanagedType.LPWStr)] string deviceId, int role);
+    }
+    [ComImport, Guid("870AF99C-171D-4F9E-AF0D-E63DF40C2BC9")] class PolicyConfigClient { }
+    public static class AudioEndpoints {
+        // flow: 0 playback, 1 recording. role: 0 console, 1 multimedia, 2 communications.
+        public static string GetDefault(int flow, int role) {
+            IMMDeviceEnumerator e = (IMMDeviceEnumerator)new MMDeviceEnumeratorClass();
+            IMMDevice d;
+            if (e.GetDefaultAudioEndpoint(flow, role, out d) != 0 || d == null) return null;
+            string id;
+            if (d.GetId(out id) != 0) return null;
+            return id;
+        }
+        public static void SetDefault(string deviceId, int role) {
+            IPolicyConfig p = (IPolicyConfig)new PolicyConfigClient();
+            int hr = p.SetDefaultEndpoint(deviceId, role);
+            if (hr != 0) Marshal.ThrowExceptionForHR(hr);
+        }
+    }
+}
+'@
+
+function Initialize-AudioInterop {
+    if (-not ('DebloatTool.AudioEndpoints' -as [type])) { Add-Type -TypeDefinition $script:AudioInteropSource -Language CSharp }
+}
+
+$script:AudioFlows = @(
+    [pscustomobject]@{ key = 'Render';  index = 0; prefix = '{0.0.0.00000000}'; label = 'Playback' }
+    [pscustomobject]@{ key = 'Capture'; index = 1; prefix = '{0.0.1.00000000}'; label = 'Recording' }
+)
+
+# Roles for "Default for audio" (console + multimedia) and "Default for calls" (communications).
+$script:AudioRoleSets = @{ audio = @(0, 1); calls = @(2) }
+
+function Get-AudioDefaultId([int]$Flow, [int]$Role) {
+    try { Initialize-AudioInterop; [DebloatTool.AudioEndpoints]::GetDefault($Flow, $Role) } catch { $null }
+}
+
+# Playback and recording devices Windows knows about, without ones that are gone for good.
+# DeviceState: 1 active, 2 turned off, 4 not present, 8 unplugged.
+function Get-AudioDeviceList {
+    $base = 'SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio'
+    $out = @()
+    foreach ($f in $script:AudioFlows) {
+        $defAudio = Get-AudioDefaultId $f.index 0
+        $defCalls = Get-AudioDefaultId $f.index 2
+        $root = Open-RegKey "HKLM\$base\$($f.key)"
+        if (-not $root) { continue }
+        try {
+            foreach ($g in $root.GetSubKeyNames()) {
+                $k = $root.OpenSubKey($g)
+                if (-not $k) { continue }
+                try {
+                    $state = ([int]$k.GetValue('DeviceState', 0)) -band 0xF
+                    if ($state -notin 1, 2, 8) { continue }
+                    $name = ''; $iface = ''
+                    $pk = $k.OpenSubKey('Properties')
+                    if ($pk) {
+                        try {
+                            $name = [string]$pk.GetValue('{a45c254e-df1c-4efd-8020-67d146a850e0},2')
+                            $iface = [string]$pk.GetValue('{b3f8fa53-0004-438e-9003-51a46e139bfc},6')
+                        } finally { $pk.Close() }
+                    }
+                    if (-not $name) { $name = 'Unnamed device' }
+                    $id = "$($f.prefix).$g"
+                    $out += [pscustomobject]@{
+                        id = $id; instanceId = "SWD\MMDEVAPI\$id"; flow = $f.label; flowIndex = $f.index
+                        name = $name; iface = $iface
+                        display = $(if ($iface) { "$name ($iface)" } else { $name })
+                        state = $(switch ($state) { 1 { 'Active' } 2 { 'Off' } 8 { 'Unplugged' } })
+                        isDefault = [bool]($defAudio -and $defAudio -eq $id)
+                        isCallsDefault = [bool]($defCalls -and $defCalls -eq $id)
+                    }
+                } finally { $k.Close() }
+            }
+        } finally { $root.Close() }
+    }
+    $order = @{ Active = 0; Unplugged = 1; Off = 2 }
+    @($out | Sort-Object flowIndex, { $order[$_.state] }, display)
+}
+
+function Find-AudioDevice([string]$Id) {
+    @(Get-AudioDeviceList) | Where-Object { $_.id -eq $Id } | Select-Object -First 1
+}
+
+# Same as Disable / Enable in the Sound panel: the device stays installed but Windows and apps can't use it.
+function Set-AudioDeviceEnabled([string]$InstanceId, [bool]$Enabled) {
+    if ($Enabled) { Enable-PnpDevice -InstanceId $InstanceId -Confirm:$false -ErrorAction Stop }
+    else { Disable-PnpDevice -InstanceId $InstanceId -Confirm:$false -ErrorAction Stop }
+}
+
+function Set-AudioDeviceRecorded($Device, [bool]$Enabled) {
+    $wasOn = $Device.state -ne 'Off'
+    if ($wasOn -eq $Enabled) { throw "$($Device.display) is already $(if ($Enabled) { 'on' } else { 'off' })." }
+    Set-AudioDeviceEnabled $Device.instanceId $Enabled
+    $change = [pscustomobject]@{ kind = 'audiodevice'; name = $Device.display; instanceId = $Device.instanceId; prior = $wasOn }
+    $entry = New-JournalEntry 'setting.audiodevice' "Sound: $($Device.display) turned $(if ($Enabled) { 'on' } else { 'off' })" @($change) @()
+    Add-JournalEntry $entry
+    $entry
+}
+
+function Set-AudioDefault([string]$Id, [int[]]$Roles) {
+    Initialize-AudioInterop
+    foreach ($r in $Roles) { [DebloatTool.AudioEndpoints]::SetDefault($Id, $r) }
+}
+
+# $For is 'audio' or 'calls'.
+function Set-AudioDefaultRecorded($Device, [string]$For) {
+    if ($Device.state -ne 'Active') { throw "$($Device.display) is $($Device.state.ToLower()), so it can't be the default." }
+    $roles = $script:AudioRoleSets[$For]
+    if (-not $roles) { throw "Unknown default type '$For'." }
+    $priorId = Get-AudioDefaultId $Device.flowIndex $roles[0]
+    if ($priorId -eq $Device.id) { throw "$($Device.display) is already the default." }
+    $priorName = $(if ($priorId) { $p = Find-AudioDevice $priorId; if ($p) { $p.display } else { 'another device' } } else { 'none' })
+    Set-AudioDefault $Device.id $roles
+    $what = $(if ($For -eq 'calls') { 'calls' } else { 'audio' })
+    $change = [pscustomobject]@{ kind = 'audiodefault'; name = $Device.display; flow = $Device.flow; roles = @($roles); prior = $priorId; priorName = $priorName }
+    $entry = New-JournalEntry 'setting.audiodefault' "Sound: $($Device.display) is the default $($Device.flow.ToLower()) device for $what" @($change) @()
+    Add-JournalEntry $entry
+    $entry
+}
+
+#endregion
+#region System sounds --------------------------------------------------------
+
+# The sound scheme lives under HKCU\AppEvents\Schemes. The tests point this somewhere else.
+$script:SoundSchemeKey = 'AppEvents\Schemes'
+
+function Get-SoundSchemeName {
+    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($script:SoundSchemeKey)
+    if (-not $k) { return '' }
+    try { [string]$k.GetValue('') } finally { $k.Close() }
+}
+
+# Each sound event's key, e.g. AppEvents\Schemes\Apps\.Default\SystemAsterisk
+function Get-SoundEventKeys {
+    $appsPath = "$($script:SoundSchemeKey)\Apps"
+    $apps = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($appsPath)
+    if (-not $apps) { return @() }
+    $out = @()
+    try {
+        foreach ($a in $apps.GetSubKeyNames()) {
+            $ak = $apps.OpenSubKey($a)
+            if (-not $ak) { continue }
+            try { foreach ($e in $ak.GetSubKeyNames()) { $out += "$appsPath\$a\$e" } } finally { $ak.Close() }
+        }
+    } finally { $apps.Close() }
+    $out
+}
+
+function Read-SoundValue([string]$Path) {
+    $k = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($Path)
+    if (-not $k) { return $null }
+    try {
+        $kind = 'String'
+        try { $kind = [string]$k.GetValueKind('') } catch { }
+        [pscustomobject]@{ kind = $kind; value = [string]$k.GetValue('', '', 'DoNotExpandEnvironmentNames') }
+    } finally { $k.Close() }
+}
+
+function Write-SoundValue([string]$Path, [string]$Value, [string]$Kind = 'String') {
+    if ($Kind -notin 'String', 'ExpandString') { $Kind = 'String' }
+    $k = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($Path)
+    try { $k.SetValue('', $Value, [Microsoft.Win32.RegistryValueKind]$Kind) } finally { $k.Close() }
+}
+
+# The scheme name and every event's current sound, as JSON, so undo can put them back exactly.
+function Get-SoundSnapshot {
+    $cur = [ordered]@{}
+    foreach ($ev in @(Get-SoundEventKeys)) {
+        $v = Read-SoundValue "$ev\.Current"
+        if ($v) { $cur[$ev] = $v }
+    }
+    [pscustomobject]@{ scheme = Get-SoundSchemeName; current = $cur } | ConvertTo-Json -Compress -Depth 5
+}
+
+# 'None' silences every event. 'Default' copies each event's Windows default sound back.
+function Set-SoundScheme([string]$Which) {
+    if ($Which -notin 'None', 'Default') { throw "Unknown sound scheme '$Which'." }
+    Write-SoundValue $script:SoundSchemeKey ".$Which"
+    foreach ($ev in @(Get-SoundEventKeys)) {
+        if ($Which -eq 'None') { Write-SoundValue "$ev\.Current" ''; continue }
+        $d = Read-SoundValue "$ev\.Default"
+        if ($d) { Write-SoundValue "$ev\.Current" $d.value $d.kind }
+    }
+}
+
+function Restore-SoundScheme([string]$Snapshot) {
+    if (-not $Snapshot) { return }
+    $snap = $Snapshot | ConvertFrom-Json
+    Write-SoundValue $script:SoundSchemeKey ([string]$snap.scheme)
+    $saved = @{}
+    if ($snap.current) { foreach ($p in $snap.current.PSObject.Properties) { $saved[$p.Name] = $p.Value } }
+    foreach ($ev in @(Get-SoundEventKeys)) {
+        if ($saved.ContainsKey($ev)) { Write-SoundValue "$ev\.Current" ([string]$saved[$ev].value) ([string]$saved[$ev].kind) }
+        else { [Microsoft.Win32.Registry]::CurrentUser.DeleteSubKeyTree("$ev\.Current", $false) }
+    }
 }
 
 #endregion
