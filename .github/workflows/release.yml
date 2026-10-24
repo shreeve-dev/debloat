@@ -1,7 +1,9 @@
 name: Release
 
-# Push a tag like v1.0.0 to publish a release:
-#   git tag v1.0.0 && git push origin v1.0.0
+# Publish a release either way:
+#   - Actions > Release > Run workflow, and type the version (v1.2.3). The tag is created on
+#     the commit the workflow runs on.
+#   - Or push a tag: git tag v1.2.3 && git push origin v1.2.3
 # The release gets the app zip, a SHA256SUMS file and install.ps1 (the one-line installer)
 # with that zip's hash written into it. `irm https://shreeve.dev/win | iex` always points at
 # the latest release, never at main, so an unreleased commit never reaches anyone's PC.
@@ -9,6 +11,11 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, like v1.2.3'
+        required: true
 
 permissions:
   contents: write       # create the release
@@ -18,6 +25,8 @@ permissions:
 jobs:
   release:
     name: Test and publish
+    # Run workflow only releases from main, so a work-in-progress branch can't be published.
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main'
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
@@ -31,9 +40,11 @@ jobs:
 
       - name: Build zip and installer
         shell: powershell
+        env:
+          VERSION: ${{ inputs.version || github.ref_name }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $version = '${{ github.ref_name }}'
+          $version = $env:VERSION
           if ($version -notmatch '^v\d+\.\d+\.\d+$') { throw "Tag $version should look like v1.2.3" }
           New-Item -ItemType Directory dist | Out-Null
           $zip = "dist\debloattool-$version.zip"
@@ -61,4 +72,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --title "DebloatTool $GITHUB_REF_NAME" --generate-notes --verify-tag
+          VERSION: ${{ inputs.version || github.ref_name }}
+        # --target makes the tag on this exact commit when it doesn't exist yet (Run workflow).
+        run: gh release create "$VERSION" dist/* --title "DebloatTool $VERSION" --generate-notes --target "$GITHUB_SHA"
