@@ -210,3 +210,120 @@ function Invoke-NetAdapterChange($Target) {
 }
 
 #endregion
+#region PC name and domain ---------------------------------------------------
+
+# Problems with a new PC name, in plain words. Empty when it's fine.
+function Test-ComputerNameText([string]$Name) {
+    $Name = "$Name".Trim()
+    if (-not $Name) { return @('Enter a name.') }
+    $errs = @()
+    if ($Name.Length -gt 15) { $errs += 'PC names can be at most 15 characters.' }
+    if ($Name -notmatch '^[A-Za-z0-9-]+$') { $errs += 'Use only letters, numbers and hyphens (no spaces).' }
+    elseif ($Name -match '^\d+$') { $errs += 'A PC name cannot be only numbers.' }
+    elseif ($Name.StartsWith('-') -or $Name.EndsWith('-')) { $errs += 'A PC name cannot start or end with a hyphen.' }
+    $errs
+}
+
+function Test-WorkgroupText([string]$Name) {
+    $Name = "$Name".Trim()
+    if (-not $Name) { return @('Enter a workgroup name.') }
+    $errs = @()
+    if ($Name.Length -gt 15) { $errs += 'Workgroup names can be at most 15 characters.' }
+    if ($Name -match '[\\/:*?"<>|.,;=+\[\]]') { $errs += 'The workgroup name has characters Windows does not allow.' }
+    $errs
+}
+
+function Test-DomainText([string]$Name) {
+    $Name = "$Name".Trim()
+    if ($Name -notmatch '^(?=.{1,253}$)([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$') {
+        return @("'$Name' is not a valid domain name (for example corp.example.com).")
+    }
+    @()
+}
+
+function Get-ComputerIdentity {
+    $cs = Get-CimInstance Win32_ComputerSystem
+    $key = 'HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName'
+    $active = [string](Get-ItemProperty "$key\ActiveComputerName" -Name ComputerName -ErrorAction SilentlyContinue).ComputerName
+    $pending = [string](Get-ItemProperty "$key\ComputerName" -Name ComputerName -ErrorAction SilentlyContinue).ComputerName
+    if (-not $active) { $active = $env:COMPUTERNAME }
+    $caption = [string](Get-CimInstance Win32_OperatingSystem).Caption
+    [pscustomobject]@{
+        Name        = $active
+        PendingName = $(if ($pending -and $pending -ne $active) { $pending } else { $null })
+        InDomain    = [bool]$cs.PartOfDomain
+        Domain      = $(if ($cs.PartOfDomain) { [string]$cs.Domain } else { $null })
+        Workgroup   = $(if (-not $cs.PartOfDomain) { [string]$cs.Workgroup } else { $null })
+        CanJoin     = $caption -notmatch 'Home'
+        Edition     = $caption
+    }
+}
+
+# Renames the PC (takes effect after a restart). Going back to the current name just cancels
+# a pending rename, which Rename-Computer refuses to do.
+function Set-PcName([string]$Name) {
+    $Name = $Name.Trim()
+    $id = Get-ComputerIdentity
+    if ($Name -eq $id.Name) {
+        Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName' -Name ComputerName -Value $Name -ErrorAction Stop
+        Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'NV Hostname' -Value $Name -ErrorAction Stop
+    } else {
+        Rename-Computer -NewName $Name -Force -ErrorAction Stop -WarningAction SilentlyContinue
+    }
+}
+
+function Set-ComputerNameRecorded([string]$NewName) {
+    $errs = @(Test-ComputerNameText $NewName)
+    if ($errs.Count) { throw ($errs -join ' ') }
+    $id = Get-ComputerIdentity
+    $prior = $(if ($id.PendingName) { $id.PendingName } else { $id.Name })
+    if ($prior -eq $NewName.Trim()) { throw "This PC is already called $prior." }
+    if ($id.InDomain) { throw 'This PC is in a domain. Rename it while joining or leaving the domain, so the domain account is renamed too.' }
+    Set-PcName $NewName
+    $change = [pscustomobject]@{ kind = 'computername'; name = 'PC name'; prior = $prior }
+    $entry = New-JournalEntry 'setting.computername' "PC name: $prior -> $($NewName.Trim()) (after restart)" @($change) @()
+    Add-JournalEntry $entry
+    $entry
+}
+
+function Set-WorkgroupRecorded([string]$Workgroup) {
+    $errs = @(Test-WorkgroupText $Workgroup)
+    if ($errs.Count) { throw ($errs -join ' ') }
+    $id = Get-ComputerIdentity
+    if ($id.InDomain) { throw 'This PC is in a domain. Use "Leave domain" to move it to a workgroup.' }
+    if ($id.Workgroup -eq $Workgroup.Trim()) { throw "This PC is already in the $($id.Workgroup) workgroup." }
+    Add-Computer -WorkgroupName $Workgroup.Trim() -Force -ErrorAction Stop -WarningAction SilentlyContinue
+    $change = [pscustomobject]@{ kind = 'workgroup'; name = 'Workgroup'; prior = $id.Workgroup }
+    $entry = New-JournalEntry 'setting.workgroup' "Workgroup: $($id.Workgroup) -> $($Workgroup.Trim()) (after restart)" @($change) @()
+    Add-JournalEntry $entry
+    $entry
+}
+
+# Domain join and leave need a domain account, so they can't be undone from History.
+# They are logged as notes only (no undo button). Returns a short summary for the log.
+function Add-DomainJoin([string]$Domain, [pscredential]$Credential, [string]$OUPath, [string]$NewName) {
+    $errs = @(Test-DomainText $Domain)
+    if ($NewName) { $errs += @(Test-ComputerNameText $NewName) }
+    if ($errs.Count) { throw ($errs -join ' ') }
+    $id = Get-ComputerIdentity
+    if (-not $id.CanJoin) { throw "$($id.Edition) cannot join a domain. Windows Pro or higher is needed." }
+    if ($id.InDomain) { throw "This PC is already in the $($id.Domain) domain. Leave it first." }
+    $p = @{ DomainName = $Domain.Trim(); Credential = $Credential; Force = $true; ErrorAction = 'Stop'; WarningAction = 'SilentlyContinue' }
+    if ($OUPath) { $p.OUPath = $OUPath.Trim() }
+    if ($NewName -and $NewName.Trim() -ne $id.Name) { $p.NewName = $NewName.Trim() }
+    Add-Computer @p
+    "Joined $($Domain.Trim())$(if ($p.NewName) { " as $($p.NewName)" }). Restart to finish."
+}
+
+function Remove-DomainJoin([string]$Workgroup, [pscredential]$Credential) {
+    $errs = @(Test-WorkgroupText $Workgroup)
+    if ($errs.Count) { throw ($errs -join ' ') }
+    $id = Get-ComputerIdentity
+    if (-not $id.InDomain) { throw 'This PC is not in a domain.' }
+    $p = @{ WorkgroupName = $Workgroup.Trim(); Force = $true; ErrorAction = 'Stop'; WarningAction = 'SilentlyContinue' }
+    if ($Credential) { $p.UnjoinDomainCredential = $Credential }
+    Remove-Computer @p
+    "Left $($id.Domain) and joined the $($Workgroup.Trim()) workgroup. Restart to finish. Sign in with a local account afterwards."
+}
+
+#endregion

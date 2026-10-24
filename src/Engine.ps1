@@ -470,6 +470,8 @@ function Undo-Change($Change) {
         'script'  { if ($Change.undo) { Invoke-TweakScript $Change.undo $Change.snapshot | Out-Null } }
         'appx'    { Restore-App $Change }
         'netadapter' { Set-NetAdapterConfig $Change.prior }
+        'computername' { Set-PcName $Change.prior }
+        'workgroup' { Add-Computer -WorkgroupName $Change.prior -Force -ErrorAction Stop -WarningAction SilentlyContinue }
         default   { throw "Unknown change kind '$($Change.kind)'" }
     }
 }

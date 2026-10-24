@@ -686,6 +686,13 @@ function Build-SettingsList {
     $script:SettingCards = @{}; $script:SettingHeaders = @{}
     Set-Busy $true
     try {
+        $h = New-Header 'PC name & domain'
+        $script:IdPanel = New-Object System.Windows.Controls.StackPanel
+        [void]$list.Children.Add($h)
+        [void]$list.Children.Add($script:IdPanel)
+        $script:SettingHeaders['PC name & domain'] = @($h, $script:IdPanel)
+        Build-IdentitySection
+
         $h = New-Header 'Network'
         $script:NetPanel = New-Object System.Windows.Controls.StackPanel
         [void]$list.Children.Add($h)
@@ -780,10 +787,162 @@ function Update-SettingsFilter {
     }
     $netWords = 'Network IP address DNS gateway subnet static DHCP Ethernet Wi-Fi adapter'
     $visible['Network'] = (-not $q) -or $netWords.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    $idWords = 'PC name computer name rename hostname domain join workgroup Active Directory sysdm'
+    $visible['PC name & domain'] = (-not $q) -or $idWords.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0
     foreach ($k in @($script:SettingHeaders.Keys)) {
         $v = $(if ($visible[$k]) { 'Visible' } else { 'Collapsed' })
         foreach ($el in $script:SettingHeaders[$k]) { $el.Visibility = $v }
     }
+}
+
+function Build-IdentitySection {
+    $panel = $script:IdPanel
+    $panel.Children.Clear()
+    try { $id = Get-ComputerIdentity }
+    catch { [void]$panel.Children.Add((New-Card (New-Text "Could not read the PC name: $($_.Exception.Message)" 12.5 '#FF7A85'))); return }
+    $ctl = @{ Id = $id }
+    $script:IdCtl = $ctl
+    $stack = New-Object System.Windows.Controls.StackPanel
+
+    $now = "Now: $($id.Name), $(if ($id.InDomain) { "domain $($id.Domain)" } else { "workgroup $($id.Workgroup)" })"
+    [void]$stack.Children.Add((New-Text $now 14 '#F2F4F8' 'SemiBold'))
+    if ($id.PendingName) { [void]$stack.Children.Add((New-Text "Renames to $($id.PendingName) after a restart." 12.5 '#F2C14E' 'Normal' '0,3,0,0')) }
+    [void]$stack.Children.Add((New-Text 'Like the Computer Name tab in System Properties. Every change here takes effect after a restart.' 12.5 '#9AA1B2' 'Normal' '0,3,0,10'))
+
+    # Rename
+    [void]$stack.Children.Add((New-Text 'PC name' 12.5 '#C9CEDA' 'SemiBold' '0,0,0,4'))
+    $row = New-Object System.Windows.Controls.WrapPanel
+    $f = New-Field 'New name (up to 15 letters, numbers, hyphens)' $(if ($id.PendingName) { $id.PendingName } else { $id.Name }) 220
+    $ctl.Name = $f[1]
+    [void]$row.Children.Add($f[0])
+    $rename = New-Button 'Rename' $null
+    $rename.VerticalAlignment = 'Bottom'; $rename.Margin = '0,0,8,6'
+    $rename.IsEnabled = -not $id.InDomain
+    $rename.Add_Click({ Invoke-IdentityRename })
+    [void]$row.Children.Add($rename)
+    [void]$stack.Children.Add($row)
+    if ($id.InDomain) { [void]$stack.Children.Add((New-Text 'In a domain, rename while joining or leaving so the domain account changes too.' 11.5 '#6F7790' 'Normal' '0,0,0,6')) }
+
+    # Workgroup or domain
+    [void]$stack.Children.Add((New-Text 'Member of' 12.5 '#C9CEDA' 'SemiBold' '0,6,0,4'))
+    $pills = New-Object System.Windows.Controls.WrapPanel
+    $ctl.WgPill = New-Pill 'Workgroup' 'id-member' (-not $id.InDomain) $null
+    $ctl.DomPill = New-Pill 'Domain' 'id-member' $id.InDomain $null
+    foreach ($p in $ctl.WgPill, $ctl.DomPill) { $p.Add_Click({ Update-IdentityFields }); [void]$pills.Children.Add($p) }
+    [void]$stack.Children.Add($pills)
+
+    $wg = New-Object System.Windows.Controls.WrapPanel
+    $f = New-Field 'Workgroup name' $(if ($id.Workgroup) { $id.Workgroup } else { 'WORKGROUP' })
+    $ctl.Workgroup = $f[1]
+    [void]$wg.Children.Add($f[0])
+    $wgBtn = New-Button $(if ($id.InDomain) { 'Leave domain and join workgroup' } else { 'Join workgroup' }) $null
+    $wgBtn.VerticalAlignment = 'Bottom'; $wgBtn.Margin = '0,0,8,6'
+    $wgBtn.Add_Click({ Invoke-IdentityWorkgroup })
+    [void]$wg.Children.Add($wgBtn)
+    $ctl.WgFields = $wg
+    [void]$stack.Children.Add($wg)
+
+    $dom = New-Object System.Windows.Controls.StackPanel
+    $dRow = New-Object System.Windows.Controls.WrapPanel
+    $f = New-Field 'Domain (for example corp.example.com)' $(if ($id.Domain) { $id.Domain } else { '' }) 240
+    $ctl.Domain = $f[1]
+    [void]$dRow.Children.Add($f[0])
+    $f = New-Field 'OU (optional, for example OU=PCs,DC=corp,DC=example,DC=com)' '' 340
+    $ctl.OU = $f[1]
+    [void]$dRow.Children.Add($f[0])
+    $domBtn = New-Button 'Join domain' $null 'AccentBtn'
+    $domBtn.VerticalAlignment = 'Bottom'; $domBtn.Margin = '0,0,8,6'
+    $domBtn.IsEnabled = $id.CanJoin -and -not $id.InDomain
+    $domBtn.Add_Click({ Invoke-IdentityDomain })
+    [void]$dRow.Children.Add($domBtn)
+    [void]$dom.Children.Add($dRow)
+    $hint = $(if (-not $id.CanJoin) { "$($id.Edition) can't join a domain. Windows Pro or higher is needed." }
+              elseif ($id.InDomain) { "Already in $($id.Domain). To change domains, leave it first (pick Workgroup)." }
+              else { "You'll be asked for a domain account that is allowed to add PCs. If the name above is different, the PC is renamed as it joins. This can't be undone from History." })
+    [void]$dom.Children.Add((New-Text $hint 11.5 '#6F7790' 'Normal' '0,0,0,4'))
+    $ctl.DomFields = $dom
+    [void]$stack.Children.Add($dom)
+
+    [void]$panel.Children.Add((New-Card $stack))
+    Update-IdentityFields
+}
+
+function Update-IdentityFields {
+    $ctl = $script:IdCtl
+    if (-not $ctl) { return }
+    $ctl.WgFields.Visibility = $(if ($ctl.WgPill.IsChecked) { 'Visible' } else { 'Collapsed' })
+    $ctl.DomFields.Visibility = $(if ($ctl.DomPill.IsChecked) { 'Visible' } else { 'Collapsed' })
+}
+
+function Confirm-IdentityRestart([string]$Summary) {
+    Write-Log "  $Summary"
+    if ((Show-Message "$Summary`n`nRestart now to finish? Save your work in other apps first." 'YesNo' 'Question') -eq 'Yes' -and -not $script:SmokeDir) {
+        Restart-Computer -Force
+    }
+}
+
+function Invoke-IdentityRename {
+    if (-not $script:IsAdmin) { [void](Show-Message 'Renaming the PC needs administrator rights.'); return }
+    $name = $script:IdCtl.Name.Text.Trim()
+    $errs = @(Test-ComputerNameText $name)
+    if ($errs.Count) { [void](Show-Message ($errs -join "`n") 'OK' 'Warning'); return }
+    if ((Show-Message "Rename this PC to $name? It takes effect after a restart." 'YesNo' 'Question') -ne 'Yes') { return }
+    Write-Log "PC name -> $name"
+    $ok = $false
+    Set-Busy $true
+    try { [void](Set-ComputerNameRecorded $name); $ok = $true } catch { Write-Log "  ! $($_.Exception.Message)"; [void](Show-Message $_.Exception.Message 'OK' 'Warning') }
+    finally { Set-Busy $false }
+    Build-IdentitySection
+    if ($ok) { Confirm-IdentityRestart "The PC will be called $name after a restart (saved to History)." }
+}
+
+function Invoke-IdentityWorkgroup {
+    if (-not $script:IsAdmin) { [void](Show-Message 'This needs administrator rights.'); return }
+    $id = $script:IdCtl.Id
+    $wg = $script:IdCtl.Workgroup.Text.Trim()
+    $errs = @(Test-WorkgroupText $wg)
+    if ($errs.Count) { [void](Show-Message ($errs -join "`n") 'OK' 'Warning'); return }
+    $summary = $null
+    if ($id.InDomain) {
+        $msg = "Leave the $($id.Domain) domain and join the $wg workgroup?`n`nDomain accounts will no longer be able to sign in to this PC. Make sure you know the password of a local administrator account first. You'll be asked for a domain account (Cancel to try without one)."
+        if ((Show-Message $msg 'YesNo' 'Warning') -ne 'Yes') { return }
+        $cred = $null
+        try { $cred = Get-Credential -Message "Domain account that can remove PCs from $($id.Domain)" } catch { }
+        Write-Log "Leaving $($id.Domain) -> workgroup $wg"
+        Set-Busy $true
+        try { $summary = Remove-DomainJoin $wg $cred } catch { Write-Log "  ! $($_.Exception.Message)"; [void](Show-Message $_.Exception.Message 'OK' 'Warning') }
+        finally { Set-Busy $false }
+    } else {
+        if ((Show-Message "Move this PC to the $wg workgroup? It takes effect after a restart." 'YesNo' 'Question') -ne 'Yes') { return }
+        Write-Log "Workgroup -> $wg"
+        Set-Busy $true
+        try { [void](Set-WorkgroupRecorded $wg); $summary = "The PC joins the $wg workgroup after a restart (saved to History)." }
+        catch { Write-Log "  ! $($_.Exception.Message)"; [void](Show-Message $_.Exception.Message 'OK' 'Warning') }
+        finally { Set-Busy $false }
+    }
+    Build-IdentitySection
+    if ($summary) { Confirm-IdentityRestart $summary }
+}
+
+function Invoke-IdentityDomain {
+    if (-not $script:IsAdmin) { [void](Show-Message 'Joining a domain needs administrator rights.'); return }
+    $ctl = $script:IdCtl
+    $domain = $ctl.Domain.Text.Trim()
+    $name = $ctl.Name.Text.Trim()
+    $errs = @(Test-DomainText $domain) + @(Test-ComputerNameText $name)
+    if ($errs.Count) { [void](Show-Message ($errs -join "`n") 'OK' 'Warning'); return }
+    $as = $(if ($name -ne $ctl.Id.Name) { " as $name" } else { '' })
+    if ((Show-Message "Join this PC to $domain$as?`n`nThis PC must be able to reach the domain's DNS and a domain controller. This can't be undone from History; to undo it, leave the domain here." 'YesNo' 'Question') -ne 'Yes') { return }
+    $cred = $null
+    try { $cred = Get-Credential -Message "Domain account that can add PCs to $domain (DOMAIN\user)" } catch { }
+    if (-not $cred) { Write-Log 'Join domain cancelled.'; return }
+    Write-Log "Joining $domain$as"
+    $summary = $null
+    Set-Busy $true
+    try { $summary = Add-DomainJoin $domain $cred $ctl.OU.Text $name } catch { Write-Log "  ! $($_.Exception.Message)"; [void](Show-Message $_.Exception.Message 'OK' 'Warning') }
+    finally { Set-Busy $false }
+    Build-IdentitySection
+    if ($summary) { Confirm-IdentityRestart $summary }
 }
 
 function Build-NetworkSection {
@@ -1039,6 +1198,9 @@ function Build-HistoryList {
                 'task'     { "Task      $($c.path)$($c.name)  (was $($c.prior))" }
                 'script'   { "Ran       $($c.describe)" }
                 'appx'     { "Removed   $($c.label)  ($($c.name))" }
+                'netadapter'   { "Network   $($c.name)  (was $(Format-NetConfig $c.prior))" }
+                'computername' { "PC name   (was $($c.prior))" }
+                'workgroup'    { "Workgroup (was $($c.prior))" }
             }
             $tb = New-Text $line 11.5 '#9AA1B2' 'Normal' '0,2,0,0'
             $tb.FontFamily = 'Consolas'
