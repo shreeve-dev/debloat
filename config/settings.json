@@ -7,6 +7,7 @@
     "Mouse & keyboard",
     "Power",
     "Gaming",
+    "Sound",
     "Security & remote access"
   ],
   "settings": [
@@ -1070,6 +1071,165 @@
             }
           ]
         }
+      ]
+    },
+    {
+      "id": "sound.ducking",
+      "name": "During calls",
+      "category": "Sound",
+      "description": "What Windows does to other sounds when a call or voice chat starts.",
+      "options": [
+        {
+          "label": "Mute other sounds",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Multimedia\\Audio",
+              "name": "UserDuckingPreference",
+              "type": "DWord",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "label": "Lower them a lot (80%)",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Multimedia\\Audio",
+              "name": "UserDuckingPreference",
+              "type": "DWord",
+              "value": 1,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Lower them a bit (50%)",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Multimedia\\Audio",
+              "name": "UserDuckingPreference",
+              "type": "DWord",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "label": "Do nothing",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Multimedia\\Audio",
+              "name": "UserDuckingPreference",
+              "type": "DWord",
+              "value": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sound.scheme",
+      "name": "System sounds",
+      "category": "Sound",
+      "description": "The beeps and chimes for notifications, errors, emptying the Recycle Bin and so on.",
+      "options": [
+        {
+          "label": "Windows default",
+          "script": {
+            "describe": "Use the Windows default sound scheme",
+            "snapshot": "Get-SoundSnapshot",
+            "apply": "Set-SoundScheme 'Default'",
+            "undo": "Restore-SoundScheme $Snapshot",
+            "detect": "(Get-SoundSchemeName) -eq '.Default'"
+          }
+        },
+        {
+          "label": "No sounds",
+          "script": {
+            "describe": "Turn off system sounds (No Sounds scheme)",
+            "snapshot": "Get-SoundSnapshot",
+            "apply": "Set-SoundScheme 'None'",
+            "undo": "Restore-SoundScheme $Snapshot",
+            "detect": "(Get-SoundSchemeName) -eq '.None'"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sound.startup",
+      "name": "Startup sound",
+      "category": "Sound",
+      "description": "The chime Windows plays when it starts.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Authentication\\LogonUI\\BootAnimation",
+              "name": "DisableStartupSound",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            },
+            {
+              "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\EditionOverrides",
+              "name": "UserSetting_DisableStartupSound",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Authentication\\LogonUI\\BootAnimation",
+              "name": "DisableStartupSound",
+              "type": "DWord",
+              "value": 1
+            },
+            {
+              "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\EditionOverrides",
+              "name": "UserSetting_DisableStartupSound",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sound.mono",
+      "name": "Mono audio",
+      "category": "Sound",
+      "description": "Plays left and right channels together, handy with one earbud.",
+      "options": [
+        {
+          "label": "On",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Multimedia\\Audio",
+              "name": "AccessibilityMonoMixState",
+              "type": "DWord",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "label": "Off",
+          "registry": [
+            {
+              "path": "HKCU\\Software\\Microsoft\\Multimedia\\Audio",
+              "name": "AccessibilityMonoMixState",
+              "type": "DWord",
+              "value": 0,
+              "defaultMatches": true
+            }
+          ]
+        }
+      ],
+      "after": [
+        "signout"
       ]
     },
     {

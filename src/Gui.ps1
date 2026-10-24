@@ -700,7 +700,19 @@ function Build-SettingsList {
         $script:SettingHeaders['Network'] = @($h, $script:NetPanel)
         Build-NetworkSection
 
+        # Sound: the device list, then the Sound settings from the catalog under the same header.
+        $h = New-Header 'Sound'
+        $soundPanel = New-Object System.Windows.Controls.StackPanel
+        $script:SoundDevPanel = New-Object System.Windows.Controls.StackPanel
+        [void]$soundPanel.Children.Add($script:SoundDevPanel)
+        Build-SoundSection
+        foreach ($s in @($script:SettingsCatalog | Where-Object { $_.category -eq 'Sound' })) { [void]$soundPanel.Children.Add((New-SettingCard $s)) }
+        [void]$list.Children.Add($h)
+        [void]$list.Children.Add($soundPanel)
+        $script:SettingHeaders['Sound'] = @($h, $soundPanel)
+
         foreach ($cat in $script:SettingsCategories) {
+            if ($cat -eq 'Sound') { continue }
             $items = @($script:SettingsCatalog | Where-Object { $_.category -eq $cat })
             if (-not $items.Count) { continue }
             $h = New-Header $cat
@@ -789,6 +801,10 @@ function Update-SettingsFilter {
     $visible['Network'] = (-not $q) -or $netWords.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0
     $idWords = 'PC name computer name rename hostname domain join workgroup Active Directory sysdm'
     $visible['PC name & domain'] = (-not $q) -or $idWords.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    $soundWords = 'Sound audio speakers headphones headset microphone mic playback recording output input default device disable turn off HDMI'
+    $soundDev = (-not $q) -or $soundWords.IndexOf($q, [StringComparison]::OrdinalIgnoreCase) -ge 0
+    if ($script:SoundDevPanel) { $script:SoundDevPanel.Visibility = $(if ($soundDev) { 'Visible' } else { 'Collapsed' }) }
+    $visible['Sound'] = $visible['Sound'] -or $soundDev
     foreach ($k in @($script:SettingHeaders.Keys)) {
         $v = $(if ($visible[$k]) { 'Visible' } else { 'Collapsed' })
         foreach ($el in $script:SettingHeaders[$k]) { $el.Visibility = $v }
@@ -1129,6 +1145,81 @@ function Show-KeepDialog([int]$Seconds, [string]$Text) {
     $script:KeepResult
 }
 
+function Build-SoundSection {
+    $panel = $script:SoundDevPanel
+    $panel.Children.Clear()
+    $devices = @()
+    try { $devices = @(Get-AudioDeviceList) }
+    catch { [void]$panel.Children.Add((New-Card (New-Text "Could not read the sound devices: $($_.Exception.Message)" 12.5 '#FF7A85'))); return }
+    foreach ($flow in 'Playback', 'Recording') {
+        $items = @($devices | Where-Object { $_.flow -eq $flow })
+        [void]$panel.Children.Add((New-Text "$flow devices" 12.5 '#C9CEDA' 'SemiBold' '2,2,0,6'))
+        if (-not $items.Count) { [void]$panel.Children.Add((New-Text "No $($flow.ToLower()) devices found." 12.5 '#8A91A3' 'Normal' '2,0,0,8')); continue }
+        foreach ($d in $items) { [void]$panel.Children.Add((New-AudioDeviceCard $d)) }
+    }
+    $bar = New-Object System.Windows.Controls.WrapPanel
+    $bar.Margin = '0,0,0,10'
+    $refresh = New-Button 'Refresh devices' $null
+    $refresh.Add_Click({ Build-SoundSection })
+    $classic = New-Button 'Open the classic Sound panel' $null
+    $classic.Add_Click({ Start-Process control.exe 'mmsys.cpl' })
+    [void]$bar.Children.Add($refresh); [void]$bar.Children.Add($classic)
+    [void]$bar.Children.Add((New-Text 'Sample rate, exclusive mode and enhancements are in the classic Sound panel.' 11.5 '#6F7790' 'Normal' '6,8,0,0'))
+    [void]$panel.Children.Add($bar)
+}
+
+function New-AudioDeviceCard($Device) {
+    $stack = New-Object System.Windows.Controls.StackPanel
+    $title = New-Object System.Windows.Controls.WrapPanel
+    [void]$title.Children.Add((New-Text $Device.name 14 '#F2F4F8' 'SemiBold'))
+    if ($Device.isDefault) { [void]$title.Children.Add((New-Badge 'Default' '#1D3A2A' '#62D394')) }
+    if ($Device.isCallsDefault) { [void]$title.Children.Add((New-Badge 'Default for calls' '#1F2D44' '#7FB2FF')) }
+    if ($Device.state -eq 'Off') { [void]$title.Children.Add((New-Badge 'Turned off' '#3A2326' '#FF7A85')) }
+    if ($Device.state -eq 'Unplugged') { [void]$title.Children.Add((New-Badge 'Unplugged' '#23272F' '#8A91A3')) }
+    [void]$stack.Children.Add($title)
+    if ($Device.iface) { [void]$stack.Children.Add((New-Text $Device.iface 12 '#8A91A3' 'Normal' '0,2,0,0')) }
+
+    $bar = New-Object System.Windows.Controls.WrapPanel
+    $bar.Margin = '0,8,0,0'
+    $active = $Device.state -eq 'Active'
+    $b1 = New-Button 'Make default' $Device
+    $b1.IsEnabled = $active -and -not $Device.isDefault
+    $b1.Add_Click({ param($s, $e) Invoke-AudioDefault $s.Tag 'audio' })
+    $b2 = New-Button 'Default for calls' $Device
+    $b2.IsEnabled = $active -and -not $Device.isCallsDefault
+    $b2.Add_Click({ param($s, $e) Invoke-AudioDefault $s.Tag 'calls' })
+    $b3 = New-Button $(if ($Device.state -eq 'Off') { 'Turn on' } else { 'Turn off' }) $Device
+    $b3.Add_Click({ param($s, $e) Invoke-AudioToggle $s.Tag })
+    foreach ($b in $b1, $b2, $b3) { [void]$bar.Children.Add($b) }
+    [void]$stack.Children.Add($bar)
+    New-Card $stack
+}
+
+function Invoke-AudioToggle($Device) {
+    if (-not $script:IsAdmin) { [void](Show-Message 'Turning sound devices on or off needs administrator rights.'); return }
+    $on = $Device.state -eq 'Off'
+    if (-not $on) {
+        $warn = $(if ($Device.isDefault -or $Device.isCallsDefault) { "`n`nIt's a default device, so Windows switches to another $($Device.flow.ToLower()) device, if there is one." } else { '' })
+        $msg = "Turn off $($Device.display)?`n`nWindows and apps won't see it until you turn it on again here or in the Sound panel.$warn"
+        if ((Show-Message $msg 'YesNo' 'Question') -ne 'Yes') { return }
+    }
+    Write-Log "Sound: $($Device.display) -> $(if ($on) { 'on' } else { 'off' })"
+    Set-Busy $true
+    try { [void](Set-AudioDeviceRecorded $Device $on); Write-Log '  done (saved to History)' }
+    catch { Write-Log "  ! $($_.Exception.Message)"; [void](Show-Message $_.Exception.Message 'OK' 'Warning') }
+    finally { Set-Busy $false }
+    Build-SoundSection
+}
+
+function Invoke-AudioDefault($Device, [string]$For) {
+    Write-Log "Sound: default $($Device.flow.ToLower()) device$(if ($For -eq 'calls') { ' for calls' }) -> $($Device.display)"
+    Set-Busy $true
+    try { [void](Set-AudioDefaultRecorded $Device $For); Write-Log '  done (saved to History)' }
+    catch { Write-Log "  ! $($_.Exception.Message)"; [void](Show-Message $_.Exception.Message 'OK' 'Warning') }
+    finally { Set-Busy $false }
+    Build-SoundSection
+}
+
 #endregion
 #region Maintenance page -----------------------------------------------------
 
@@ -1201,6 +1292,8 @@ function Build-HistoryList {
                 'netadapter'   { "Network   $($c.name)  (was $(Format-NetConfig $c.prior))" }
                 'computername' { "PC name   (was $($c.prior))" }
                 'workgroup'    { "Workgroup (was $($c.prior))" }
+                'audiodevice'  { "Sound     $($c.name)  (was $(if ($c.prior) { 'on' } else { 'off' }))" }
+                'audiodefault' { "Sound     default $($c.flow.ToLower()) device  (was $($c.priorName))" }
             }
             $tb = New-Text $line 11.5 '#9AA1B2' 'Normal' '0,2,0,0'
             $tb.FontFamily = 'Consolas'

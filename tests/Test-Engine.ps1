@@ -278,6 +278,40 @@ foreach ($bad in '', 'bad domain', '-x.com', 'a..b', 'x_y.com') { Assert (@(Test
 $pcid = Get-ComputerIdentity
 Assert ($pcid.Name -and ($pcid.Workgroup -or $pcid.Domain)) "reads this PC: $($pcid.Name), $(if ($pcid.InDomain) { "domain $($pcid.Domain)" } else { "workgroup $($pcid.Workgroup)" })"
 
+Write-Host 'Sound checks'
+Initialize-AudioInterop
+Assert ([bool]('DebloatTool.AudioEndpoints' -as [type])) 'audio interop compiles'
+$adef = 'x'
+try { $adef = Get-AudioDefaultId 0 0; $ok = $true } catch { $ok = $false }
+Assert $ok "reads the default playback device: $(if ($adef) { $adef } else { 'none on this PC' })"
+$adevs = @(Get-AudioDeviceList)
+Assert $true "lists sound devices: $($adevs.Count) found"
+foreach ($d in $adevs) { Assert ($d.instanceId -like 'SWD\MMDEVAPI\{0.0.*' -and $d.state -in 'Active', 'Off', 'Unplugged') "device: $($d.flow) $($d.display) [$($d.state)]" }
+
+# System sounds, against a fake scheme under the test key
+$realScheme = $script:SoundSchemeKey
+$script:SoundSchemeKey = 'Software\DebloatToolTest\Schemes'
+$fake = "HKCU\$($script:SoundSchemeKey)"
+Set-RegValue $fake '(Default)' 'String' 'Custom'
+Set-RegValue "$fake\Apps\.Default\SystemAsterisk\.Default" '(Default)' 'ExpandString' '%SystemRoot%\media\Windows Background.wav'
+Set-RegValue "$fake\Apps\.Default\SystemAsterisk\.Current" '(Default)' 'String' 'C:\custom.wav'
+Set-RegValue "$fake\Apps\Explorer\EmptyRecycleBin\.Default" '(Default)' 'ExpandString' '%SystemRoot%\media\Windows Recycle.wav'
+$before = Get-SoundSnapshot
+$snd = $script:SettingsCatalog | Where-Object { $_.id -eq 'sound.scheme' }
+Assert ($null -eq (Get-SettingCurrent $snd)) 'a custom sound scheme shows as neither option'
+$rn = Set-SettingOption $snd ($snd.options | Where-Object { $_.label -eq 'No sounds' })
+Assert ((Get-SettingCurrent $snd).label -eq 'No sounds') 'No sounds becomes current'
+Assert ((Read-SoundValue "$($script:SoundSchemeKey)\Apps\.Default\SystemAsterisk\.Current").value -eq '' -and (Read-SoundValue "$($script:SoundSchemeKey)\Apps\Explorer\EmptyRecycleBin\.Current").value -eq '') 'No sounds silences every event'
+Set-SoundScheme 'Default'
+$ast = Read-SoundValue "$($script:SoundSchemeKey)\Apps\.Default\SystemAsterisk\.Current"
+Assert ($ast.value -eq '%SystemRoot%\media\Windows Background.wav' -and $ast.kind -eq 'ExpandString') 'Windows default copies each default sound back unexpanded'
+Restore-SoundScheme $before
+Assert ((Get-SoundSnapshot) -eq $before) 'restoring the snapshot puts the scheme back exactly'
+Set-SoundScheme 'None'
+[void](Undo-JournalEntry $rn.Entry.id)
+Assert ((Get-SoundSnapshot) -eq $before -and -not (Test-RegKey "$fake\Apps\Explorer\EmptyRecycleBin\.Current")) 'undo from History restores sounds and removes keys it added'
+$script:SoundSchemeKey = $realScheme
+
 # Clean up
 $hk = Open-RegKey 'HKCU\Software' -Writable
 $hk.DeleteSubKeyTree('DebloatToolTest', $false); $hk.Close()
